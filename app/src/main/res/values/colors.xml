@@ -7,4 +7,11 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <!-- colors.xml -->
+    <color name="md_theme_light_primary">#1565C0</color> <!-- Blu principale -->
+    <color name="md_theme_light_onPrimary">#FFFFFF</color>
+    <color name="md_theme_light_secondary">#42A5F5</color>
+    <color name="md_theme_light_background">#F4F7FB</color>
+    <color name="md_theme_light_surface">#FFFFFF</color>
+    <color name="md_theme_light_onSurface">#1E1E1E</color>
 </resources>

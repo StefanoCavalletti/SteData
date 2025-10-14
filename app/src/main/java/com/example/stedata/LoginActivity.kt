@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.stedata.com.example.stedata.RegisterActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.example.stedata.databinding.ActivityLoginBinding
 
@@ -20,12 +21,12 @@ class LoginActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
 
         binding.loginBtn.setOnClickListener {
-            val email = binding.emailEdit.text.toString()
-            val password = binding.passwordEdit.text.toString()
+            val email = binding.emailInput.text.toString()
+            val password = binding.passwordInput.text.toString()
             loginUser(email, password)
         }
 
-        binding.goToRegisterBtn.setOnClickListener {
+        binding.loginBtn.setOnClickListener {
             startActivity(Intent(this, RegisterActivity::class.java))
         }
     }
