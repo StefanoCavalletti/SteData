@@ -4,7 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.example.stedata.com.example.stedata.RegisterActivity
+import com.example.stedata.RegisterActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.example.stedata.databinding.ActivityLoginBinding
 
@@ -15,37 +15,61 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // ViewBinding
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Firebase
         auth = FirebaseAuth.getInstance()
 
-        binding.loginBtn.setOnClickListener {
-            val email = binding.emailInput.text.toString()
-            val password = binding.passwordInput.text.toString()
-            loginUser(email, password)
-        }
-
-        binding.loginBtn.setOnClickListener {
-            startActivity(Intent(this, RegisterActivity::class.java))
-        }
-    }
-
-    private fun loginUser(email: String, password: String) {
-        if (email.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Compila tutti i campi", Toast.LENGTH_SHORT).show()
+        // Se l'utente è già loggato, salta la schermata di login
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            navigateToHome()
             return
         }
 
-        auth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener(this) { task ->
-                if (task.isSuccessful) {
-                    Toast.makeText(this, "Accesso effettuato", Toast.LENGTH_SHORT).show()
-                    startActivity(Intent(this, MainActivity::class.java))
-                    finish()
-                } else {
-                    Toast.makeText(this, "Errore: ${task.exception?.message}", Toast.LENGTH_LONG).show()
-                }
+        setupListeners()
+    }
+
+    private fun setupListeners() {
+        // LOGIN
+        binding.loginBtn.setOnClickListener {
+            val email = binding.emailInput.text.toString().trim()
+            val password = binding.passwordInput.text.toString().trim()
+
+            if (email.isEmpty() || password.isEmpty()) {
+                Toast.makeText(this, "Inserisci email e password", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
             }
+
+            auth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        Toast.makeText(this, "Login effettuato", Toast.LENGTH_SHORT).show()
+                        navigateToHome()
+                    } else {
+                        Toast.makeText(
+                            this,
+                            "Errore: ${task.exception?.message}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+        }
+
+        // LINK REGISTRAZIONE
+        binding.toRegisterText.setOnClickListener {
+            val intent = Intent(this, RegisterActivity::class.java)
+            startActivity(intent)
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+        }
+    }
+
+    private fun navigateToHome() {
+        val intent = Intent(this, MainActivity::class.java)
+        startActivity(intent)
+        finish() // evita di tornare al login con back
     }
 }

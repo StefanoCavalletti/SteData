@@ -1,29 +1,100 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout >
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:padding="24dp"
-    android:gravity="center" android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <EditText
-        android:id="@+id/emailEdit"
-        android:hint="Email"
-        android:inputType="textEmailAddress"
+    <ScrollView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="match_parent"
+        android:background="@color/md_theme_light_background"
+        android:padding="32dp">
 
-    <EditText
-        android:id="@+id/passwordEdit"
-        android:hint="Password"
-        android:inputType="textPassword"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
 
-    <Button
-        android:id="@+id/registerBtn"
-        android:text="Crea Account"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+            <!-- TITOLO -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Crea un nuovo account"
+                android:textSize="22sp"
+                android:textColor="@color/md_theme_light_primary"
+                android:fontFamily="sans-serif-medium"
+                android:layout_marginBottom="24dp" />
 
-</LinearLayout>
+            <!-- NOME -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Nome">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/nameInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPersonName" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- EMAIL -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Email"
+                android:layout_marginTop="16dp">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/emailInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textEmailAddress" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- PASSWORD -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Password"
+                android:layout_marginTop="16dp">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/passwordInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPassword" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- CONFERMA PASSWORD -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Conferma Password"
+                android:layout_marginTop="16dp">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/confirmPasswordInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPassword" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- BUTTON -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/registerButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Registrati"
+                style="?attr/materialButtonStyle"
+                app:backgroundTint="@color/md_theme_light_primary"
+                android:textColor="@color/md_theme_light_onPrimary"
+                android:layout_marginTop="24dp" />
+
+            <!-- LINK LOGIN -->
+            <TextView
+                android:id="@+id/toLoginText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Hai già un account? Accedi"
+                android:textAlignment="center"
+                android:textColor="@color/md_theme_light_secondary"
+                android:layout_marginTop="16dp" />
+        </LinearLayout>
+    </ScrollView>
 </layout>

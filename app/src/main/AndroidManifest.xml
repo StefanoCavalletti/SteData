@@ -24,7 +24,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".LoginActivity" />
-        <activity android:name=".com.example.stedata.RegisterActivity" />
+        <activity android:name=".RegisterActivity" />
     </application>
 
 </manifest>
