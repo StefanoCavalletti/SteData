@@ -7,11 +7,12 @@ import com.example.stedata.databinding.ItemRilevazioneBinding
 import com.example.stedata.models.Rilevazione
 
 class RilevazioneAdapter(
-    private val rilevazioni: List<Rilevazione>
+    private val rilevazioni: List<Rilevazione>,
+    private val onClick: (Rilevazione) -> Unit
 ) : RecyclerView.Adapter<RilevazioneAdapter.RilevazioneViewHolder>() {
 
-    inner class RilevazioneViewHolder(val binding: ItemRilevazioneBinding) :
-        RecyclerView.ViewHolder(binding.root)
+    inner class RilevazioneViewHolder(val binding: ItemRilevazioneBinding)
+        : RecyclerView.ViewHolder(binding.root)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RilevazioneViewHolder {
         val binding = ItemRilevazioneBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -23,7 +24,12 @@ class RilevazioneAdapter(
         holder.binding.timestampText.text = r.timestamp
         holder.binding.incassoText.text = "Incasso: €${r.incasso}"
         holder.binding.restiText.text = "Resti: €${r.resti}"
+
+        holder.binding.root.setOnClickListener {
+            onClick(r)
+        }
     }
 
     override fun getItemCount() = rilevazioni.size
 }
+

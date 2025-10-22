@@ -48,18 +48,19 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/machinesRecyclerView"
             android:layout_width="match_parent"
-            android:layout_height="307dp"
+            android:layout_height="366dp"
             android:padding="8dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/logoutButton"
+            style="?attr/materialButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
             android:text="Logout"
-            style="?attr/materialButtonStyle"
-            app:backgroundTint="@color/md_theme_light_secondary"
             android:textColor="@color/md_theme_light_onPrimary"
-            android:layout_marginTop="32dp" />
+            app:backgroundTint="@color/md_theme_light_secondary" />
+
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/addMachineFab"
             android:layout_width="wrap_content"
