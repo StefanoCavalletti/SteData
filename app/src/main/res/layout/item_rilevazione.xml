@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardElevation="2dp"
+    app:cardCornerRadius="10dp"
+    android:clickable="true"
+    android:focusable="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Timestamp / titolo -->
+        <TextView
+            android:id="@+id/timestampText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="2025-10-14 15:30"
+            android:textStyle="bold"
+            android:textColor="@color/md_theme_light_primary"
+            android:textSize="16sp" />
+
+        <!-- Incasso -->
+        <TextView
+            android:id="@+id/incassoText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Incasso: €2700"
+            android:textColor="@color/md_theme_light_onSurface"
+            android:textSize="14sp"
+            android:layout_marginTop="6dp" />
+
+        <!-- Resti -->
+        <TextView
+            android:id="@+id/restiText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Resti: €300"
+            android:textColor="@color/md_theme_light_onSurface"
+            android:textSize="14sp"
+            android:layout_marginTop="4dp" />
+
+        <!-- (Opzionale) preview del file EVA DTS, testo a scomparsa o truncato -->
+        <TextView
+            android:id="@+id/filePreviewText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Preview: DXS*9252131001*VA*V1/6*1..."
+            android:textColor="@color/md_theme_light_onSurface"
+            android:textSize="12sp"
+            android:layout_marginTop="8dp"
+            android:maxLines="2"
+            android:ellipsize="end" />
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
+</layout>

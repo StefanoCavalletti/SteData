@@ -34,6 +34,9 @@ class MainActivity : AppCompatActivity() {
                 // se la sessione è invalidata o l'account cancellato
                 startActivity(Intent(this, LoginActivity::class.java))
                 finish()
+            } else {
+                startActivity(Intent(this, HomeActivity::class.java))
+                finish()
             }
         }
 
