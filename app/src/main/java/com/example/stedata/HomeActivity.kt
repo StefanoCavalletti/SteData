@@ -20,6 +20,11 @@ import com.example.stedata.models.Rilevazione
 import com.example.stedata.adapters.MachineAdapter
 import java.util.Date
 import java.util.Locale
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.RecyclerView
+import android.graphics.*
+import androidx.core.content.ContextCompat
+
 
 
 class HomeActivity : AppCompatActivity() {
@@ -56,7 +61,56 @@ class HomeActivity : AppCompatActivity() {
         binding.addMachineFab.setOnClickListener {
             showAddRilevazioneDialog()
         }
-        //createExampleData()
+        //Swipe sinistro per eliminare gettoniera
+        val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean = false
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val position = viewHolder.getAbsoluteAdapterPosition()
+                val machine = machines[position]
+                confirmDeleteMachine(machine.machineId, position)
+            }
+
+            override fun onChildDraw(
+                c: Canvas,
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                dX: Float,
+                dY: Float,
+                actionState: Int,
+                isCurrentlyActive: Boolean
+            ) {
+                val itemView = viewHolder.itemView
+                val paint = Paint()
+                paint.color = Color.RED
+                val background = RectF(
+                    itemView.right.toFloat() + dX,
+                    itemView.top.toFloat(),
+                    itemView.right.toFloat(),
+                    itemView.bottom.toFloat()
+                )
+                c.drawRect(background, paint)
+
+                val icon = ContextCompat.getDrawable(this@HomeActivity, android.R.drawable.ic_menu_delete)
+                icon?.let {
+                    val iconMargin = (itemView.height - it.intrinsicHeight) / 2
+                    val iconTop = itemView.top + iconMargin
+                    val iconBottom = iconTop + it.intrinsicHeight
+                    val iconLeft = itemView.right - iconMargin - it.intrinsicWidth
+                    val iconRight = itemView.right - iconMargin
+                    it.setBounds(iconLeft, iconTop, iconRight, iconBottom)
+                    it.draw(c)
+                }
+
+                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+            }
+        }
+        ItemTouchHelper(swipeHandler).attachToRecyclerView(binding.machinesRecyclerView)
+
         loadMachines()
     }
 
@@ -126,77 +180,6 @@ class HomeActivity : AppCompatActivity() {
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Errore nel caricamento: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-    }
-
-    private fun createExampleData() {
-        val auth = FirebaseAuth.getInstance()
-        val db = FirebaseFirestore.getInstance()
-        val uid = auth.currentUser?.uid ?: return
-
-        // 🔹 1. Macchinetta di esempio
-        val machine = mapOf(
-            "machineId" to "VM1234",
-            "lastUpdate" to "2025-10-22 10:30",
-            "totalRilevazioni" to 2
-        )
-
-        db.collection("users").document(uid)
-            .collection("vending_machines").document("VM1234")
-            .set(machine)
-            .addOnSuccessListener {
-                Toast.makeText(this, "Macchinetta di esempio creata ✅", Toast.LENGTH_SHORT).show()
-
-                // 🔹 2. Rilevazioni di esempio per quella macchinetta
-                val rilevazioni = listOf(
-                    mapOf(
-                        "timestamp" to "2025-10-22 10:30",
-                        "incasso" to 27.0,
-                        "resti" to 3.0,
-                        "file" to "DXS*9252131001*VA*V1/6*1..."
-                    ),
-                    mapOf(
-                        "timestamp" to "2025-10-20 09:15",
-                        "incasso" to 31.5,
-                        "resti" to 2.5,
-                        "file" to "DXS*9252131001*VA*V1/6*2..."
-                    )
-                )
-
-                val machineRef = db.collection("users").document(uid)
-                    .collection("vending_machines").document("VM1234")
-                    .collection("rilevazioni")
-
-                for (rilevazione in rilevazioni) {
-                    machineRef.add(rilevazione)
-                }
-            }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, "Errore: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-
-        // 🔹 3. Altra macchinetta opzionale
-        val machine2 = mapOf(
-            "machineId" to "VM5678",
-            "lastUpdate" to "2025-10-21 17:45",
-            "totalRilevazioni" to 1
-        )
-
-        db.collection("users").document(uid)
-            .collection("vending_machines").document("VM5678")
-            .set(machine2)
-            .addOnSuccessListener {
-                val rilevazione2 = mapOf(
-                    "timestamp" to "2025-10-21 17:45",
-                    "incasso" to 19.75,
-                    "resti" to 1.25,
-                    "file" to "DXS*9252131001*VA*V1/6*3..."
-                )
-
-                db.collection("users").document(uid)
-                    .collection("vending_machines").document("VM5678")
-                    .collection("rilevazioni")
-                    .add(rilevazione2)
             }
     }
 
@@ -283,8 +266,53 @@ class HomeActivity : AppCompatActivity() {
                 }
         }
     }
+    private fun confirmDeleteMachine(machineId: String, position: Int) {
+        AlertDialog.Builder(this)
+            .setTitle("Eliminare la gettoniera $machineId?")
+            .setMessage("⚠️ Verranno eliminati anche tutti i dati e le rilevazioni associate a questa gettoniera. L'operazione non può essere annullata.")
+            .setPositiveButton("Elimina") { _, _ ->
+                deleteMachineAndRilevazioni(machineId, position)
+            }
+            .setNegativeButton("Annulla") { _, _ ->
+                adapter.notifyItemChanged(position)
+            }
+            .show()
+    }
+    private fun deleteMachineAndRilevazioni(machineId: String, position: Int) {
+        val uid = auth.currentUser?.uid ?: return
+        val db = FirebaseFirestore.getInstance()
 
+        val machineRef = db.collection("users").document(uid)
+            .collection("vending_machines").document(machineId)
+        val rilevazioniRef = machineRef.collection("rilevazioni")
 
+        // 🔹 1. Elimina tutte le rilevazioni sotto la macchina
+        rilevazioniRef.get().addOnSuccessListener { snapshot ->
+            val batch = db.batch()
+            for (doc in snapshot.documents) {
+                batch.delete(doc.reference)
+            }
 
+            // 🔹 2. Dopo aver eliminato le rilevazioni, elimina la macchina stessa
+            batch.commit().addOnSuccessListener {
+                machineRef.delete()
+                    .addOnSuccessListener {
+                        machines.removeAt(position)
+                        adapter.notifyItemRemoved(position)
+                        Toast.makeText(this, "Gettoniera $machineId e relative rilevazioni eliminate ✅", Toast.LENGTH_LONG).show()
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(this, "Errore eliminando la gettoniera: ${e.message}", Toast.LENGTH_SHORT).show()
+                        adapter.notifyItemChanged(position)
+                    }
+            }.addOnFailureListener { e ->
+                Toast.makeText(this, "Errore eliminando rilevazioni: ${e.message}", Toast.LENGTH_SHORT).show()
+                adapter.notifyItemChanged(position)
+            }
+        }.addOnFailureListener { e ->
+            Toast.makeText(this, "Errore caricando le rilevazioni: ${e.message}", Toast.LENGTH_SHORT).show()
+            adapter.notifyItemChanged(position)
+        }
+    }
 
 }
