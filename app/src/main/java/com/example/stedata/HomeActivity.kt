@@ -24,6 +24,11 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import android.graphics.*
 import androidx.core.content.ContextCompat
+import androidx.drawerlayout.widget.DrawerLayout
+import com.google.android.material.navigation.NavigationView
+import androidx.appcompat.app.ActionBarDrawerToggle
+import android.widget.TextView
+
 
 
 
@@ -112,6 +117,46 @@ class HomeActivity : AppCompatActivity() {
         ItemTouchHelper(swipeHandler).attachToRecyclerView(binding.machinesRecyclerView)
 
         loadMachines()
+        val drawerLayout = binding.drawerLayout
+        val navigationView = binding.navigationView
+        val toolbar = binding.toolbar
+
+        setSupportActionBar(toolbar)
+
+        val toggle = ActionBarDrawerToggle(
+            this, drawerLayout, toolbar,
+            R.string.navigation_drawer_open,
+            R.string.navigation_drawer_close
+        )
+        drawerLayout.addDrawerListener(toggle)
+        toggle.syncState()
+
+// Mostra email utente nel menu
+        navigationView.getHeaderView(0)
+            .findViewById<TextView>(R.id.headerEmail)
+            .text = user?.email ?: "Utente anonimo"
+
+// Gestione voci menu
+        navigationView.setNavigationItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_home -> drawerLayout.closeDrawers()
+                R.id.nav_add -> {
+                    drawerLayout.closeDrawers()
+                    showAddRilevazioneDialog()
+                }
+                R.id.nav_settings -> {
+                    drawerLayout.closeDrawers()
+                    Toast.makeText(this, "Impostazioni in sviluppo ⚙️", Toast.LENGTH_SHORT).show()
+                }
+                R.id.nav_logout -> {
+                    drawerLayout.closeDrawers()
+                    FirebaseAuth.getInstance().signOut()
+                    finish()
+                }
+            }
+            true
+        }
+
     }
 
     private fun loadUserInfo() {

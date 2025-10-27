@@ -1,77 +1,102 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-<LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/md_theme_light_background"
-    android:fitsSystemWindows="true">
 
-    <!-- TOOLBAR -->
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:backgroundTint="@color/md_theme_light_primary"
-        android:title="Home"
-        android:titleTextColor="@color/md_theme_light_onPrimary"
-        app:titleCentered="true"
-        app:menu="@menu/home_menu" />
-
-    <!-- CONTENUTO CENTRALE -->
-    <LinearLayout
+    <androidx.drawerlayout.widget.DrawerLayout
+        android:id="@+id/drawerLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:padding="24dp">
+        android:fitsSystemWindows="true">
 
-        <TextView
-            android:id="@+id/welcomeText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Benvenuto!"
-            android:textColor="@color/md_theme_light_primary"
-            android:textSize="22sp"
-            android:fontFamily="sans-serif-medium"
-            android:layout_marginBottom="16dp" />
-
-        <TextView
-            android:id="@+id/emailText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Email utente"
-            android:textColor="@color/md_theme_light_onSurface"
-            android:textSize="16sp" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/machinesRecyclerView"
+        <!-- CONTENUTO PRINCIPALE -->
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="366dp"
-            android:padding="8dp" />
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:background="@color/md_theme_light_background">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/logoutButton"
-            style="?attr/materialButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:text="Logout"
-            android:textColor="@color/md_theme_light_onPrimary"
-            app:backgroundTint="@color/md_theme_light_secondary" />
+            <!-- TOOLBAR -->
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@color/md_theme_light_primary"
+                android:title="Home"
+                android:titleTextColor="@color/md_theme_light_onPrimary"
+                app:titleCentered="true"
+                app:navigationIcon="@android:drawable/ic_menu_more"
+                android:elevation="4dp" />
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/addMachineFab"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:contentDescription="Aggiungi rilevazione"
-            android:src="@android:drawable/ic_input_add"
-            app:tint="@color/white"
-            app:backgroundTint="@color/md_theme_light_primary"
-            android:layout_gravity="bottom|end"
-            android:layout_margin="24dp" />
+            <!-- CONTENUTO CENTRALE -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:padding="24dp">
 
-    </LinearLayout>
-</LinearLayout>
+                <TextView
+                    android:id="@+id/welcomeText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Benvenuto!"
+                    android:textColor="@color/md_theme_light_primary"
+                    android:textSize="22sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:id="@+id/emailText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Email utente"
+                    android:textColor="@color/md_theme_light_onSurface"
+                    android:textSize="16sp"
+                    android:layout_marginBottom="16dp" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/machinesRecyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:padding="8dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/logoutButton"
+                    style="?attr/materialButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Logout"
+                    android:textColor="@color/md_theme_light_onPrimary"
+                    app:backgroundTint="@color/md_theme_light_secondary" />
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/addMachineFab"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Aggiungi rilevazione"
+                    android:src="@android:drawable/ic_input_add"
+                    app:tint="@color/white"
+                    app:backgroundTint="@color/md_theme_light_primary"
+                    android:layout_gravity="bottom|end"
+                    android:layout_margin="24dp" />
+
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- MENU LATERALE -->
+        <com.google.android.material.navigation.NavigationView
+            android:id="@+id/navigationView"
+            android:layout_width="280dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"
+            android:fitsSystemWindows="true"
+            android:background="@color/md_theme_light_surface"
+            app:itemIconTint="@color/md_theme_light_onSurfaceVariant"
+            app:itemTextColor="@color/md_theme_light_onSurface"
+            app:menu="@menu/drawer_menu"
+            app:headerLayout="@layout/drawer_header" />
+
+    </androidx.drawerlayout.widget.DrawerLayout>
 </layout>

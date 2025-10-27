@@ -14,4 +14,6 @@
     <color name="md_theme_light_background">#F4F7FB</color>
     <color name="md_theme_light_surface">#FFFFFF</color>
     <color name="md_theme_light_onSurface">#1E1E1E</color>
+    <color name="md_theme_light_onSurfaceVariant">#5A5A5A</color>
+    <color name="md_theme_light_outline">#B0BEC5</color>
 </resources>
