@@ -1,0 +1,47 @@
+package com.example.stedata
+
+import android.os.Bundle
+import androidx.fragment.app.Fragment
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import com.example.stedata.databinding.FragmentSettingsBinding
+import com.google.firebase.auth.FirebaseAuth
+import android.widget.Toast
+
+class SettingsFragment : Fragment() {
+
+    private var _binding: FragmentSettingsBinding? = null
+    private val binding get() = _binding!!
+    private val auth = FirebaseAuth.getInstance()
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentSettingsBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        val user = auth.currentUser
+        binding.userEmail.text = user?.email ?: "Utente anonimo"
+
+        binding.btnLogout.setOnClickListener {
+            auth.signOut()
+            Toast.makeText(requireContext(), "Logout effettuato ✅", Toast.LENGTH_SHORT).show()
+            requireActivity().finish()
+        }
+
+        binding.btnTheme.setOnClickListener {
+            Toast.makeText(requireContext(), "Cambio tema in sviluppo 🎨", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+}
