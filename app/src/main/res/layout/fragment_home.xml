@@ -22,7 +22,7 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/machinesRecyclerView"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
+            android:layout_height="483dp"
             android:layout_weight="1"
             android:padding="4dp" />
 
@@ -32,10 +32,21 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|end"
             android:layout_margin="16dp"
+            android:contentDescription="Aggiungi rilevazione"
             android:src="@android:drawable/ic_input_add"
             app:backgroundTint="@color/md_theme_light_primary"
-            app:tint="@color/md_theme_light_onPrimary"
-            android:contentDescription="Aggiungi rilevazione" />
+            app:tint="@color/md_theme_light_onPrimary" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/importFileFab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="16dp"
+            android:contentDescription="Importa file EVA DTS"
+            android:src="@android:drawable/ic_menu_upload"
+            app:backgroundTint="@color/md_theme_light_primary"
+            app:tint="@android:color/white" />
 
     </LinearLayout>
 </layout>
