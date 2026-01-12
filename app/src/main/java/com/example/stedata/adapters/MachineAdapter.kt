@@ -27,4 +27,12 @@ class MachineAdapter(
     }
 
     override fun getItemCount() = machines.size
+
+    fun updateList(newMachines: List<Machine>) {
+        // Se la lista è immutabile (List), devi convertire la tua var interna in MutableList o riassegnarla
+        // Assumendo che nel costruttore tu abbia passato una MutableList:
+        (machines as MutableList).clear()
+        machines.addAll(newMachines)
+        notifyDataSetChanged()
+    }
 }

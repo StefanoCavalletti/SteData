@@ -14,6 +14,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -28,6 +29,7 @@ import java.util.*
 
 class HomeFragment : Fragment() {
 
+    private val viewModel: HomeViewModel by viewModels()
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     private val auth = FirebaseAuth.getInstance()
@@ -64,7 +66,19 @@ class HomeFragment : Fragment() {
             startActivity(intent)
         }
         setupSwipeToDelete()
-        loadMachines()
+        // 2. Osserva i dati
+        viewModel.machines.observe(viewLifecycleOwner) { machineList ->
+            // Quando i dati cambiano, aggiorna l'adapter
+            adapter.updateList(machineList)
+        }
+
+        viewModel.error.observe(viewLifecycleOwner) { errorMsg ->
+            Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
+        }
+
+        // 3. Lancia il caricamento
+        viewModel.loadMachines()
+        //loadMachines()
     }
 
     private fun loadMachines() {

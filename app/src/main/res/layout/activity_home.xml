@@ -27,11 +27,18 @@
                 app:titleCentered="true"
                 app:navigationIcon="@android:drawable/ic_menu_more"
                 android:elevation="4dp" />
-            <FrameLayout
+            <!-- <FrameLayout
                 android:id="@+id/fragmentContainer"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="1" />
+                android:layout_weight="1" /> -->
+            <androidx.fragment.app.FragmentContainerView
+                android:id="@+id/nav_host_fragment"
+                android:name="androidx.navigation.fragment.NavHostFragment"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:defaultNavHost="true"
+                app:navGraph="@navigation/nav_graph" />
 
 
             <!-- CONTENUTO CENTRALE -->
