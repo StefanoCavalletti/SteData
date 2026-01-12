@@ -2,4 +2,21 @@
     <string name="app_name">SteData</string>
     <string name="navigation_drawer_open">Apri menu</string>
     <string name="navigation_drawer_close">Chiudi menu</string>
+    <string name="welcome_message">Benvenuto in SteData</string>
+
+    <string name="title_home">Le tue gettoniere</string>
+    <string name="fab_add">Aggiungi Rilevazione</string>
+    <string name="fab_import">Importa EVA-DTS</string>
+    <string name="dialog_add_title">Nuova Rilevazione</string>
+    <string name="dialog_machine_id">ID Gettoniera</string>
+    <string name="dialog_incasso">Incasso (€)</string>
+    <string name="dialog_resti">Resti (€)</string>
+    <string name="btn_save">Salva</string>
+    <string name="btn_cancel">Annulla</string>
+    <string name="btn_delete">Elimina</string>
+
+    <string name="error_generic">Si è verificato un errore</string>
+    <string name="success_save">Rilevazione salvata ✅</string>
+    <string name="confirm_delete_title">Eliminare %1$s?</string>
+    <string name="confirm_delete_msg">Verranno eliminati tutti i dati associati.</string>
 </resources>

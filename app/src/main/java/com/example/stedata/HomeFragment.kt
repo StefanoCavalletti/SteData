@@ -2,7 +2,10 @@ package com.example.stedata
 
 import android.app.AlertDialog
 import android.content.Intent
-import android.graphics.*
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RectF
 import android.os.Bundle
 import android.text.InputType
 import android.view.LayoutInflater
@@ -22,22 +25,19 @@ import com.example.stedata.adapters.MachineAdapter
 import com.example.stedata.databinding.FragmentHomeBinding
 import com.example.stedata.models.Machine
 import com.example.stedata.utils.EvaDtsParser
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import java.text.SimpleDateFormat
-import java.util.*
 
 class HomeFragment : Fragment() {
 
-    private val viewModel: HomeViewModel by viewModels()
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
-    private val auth = FirebaseAuth.getInstance()
-    private val db = FirebaseFirestore.getInstance()
+
+    // 1. Inizializza il ViewModel
+    private val viewModel: HomeViewModel by viewModels()
 
     private val machines = mutableListOf<Machine>()
     private lateinit var adapter: MachineAdapter
 
+    // Variabili per il Dialog (file picker)
     private var lastDialogIdField: EditText? = null
     private var lastDialogIncassoField: EditText? = null
     private var lastDialogRestiField: EditText? = null
@@ -51,81 +51,119 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        setupRecyclerView()
+        setupObservers() // Qui colleghiamo il ViewModel
+        setupListeners()
+        setupSwipeToDelete()
+
+        // Carica i dati all'avvio
+        viewModel.loadMachines()
+    }
+
+    private fun setupRecyclerView() {
         adapter = MachineAdapter(machines) { machine ->
             val intent = Intent(requireContext(), MachineDetailActivity::class.java)
             intent.putExtra("MACHINE_ID", machine.machineId)
             startActivity(intent)
         }
-
         binding.machinesRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.machinesRecyclerView.adapter = adapter
-
-        binding.addMachineFab.setOnClickListener { showAddRilevazioneDialog() }
-        binding.importFileFab.setOnClickListener {
-            val intent = Intent(requireContext(), FilePickerActivity::class.java)
-            startActivity(intent)
-        }
         setupSwipeToDelete()
-        // 2. Osserva i dati
-        viewModel.machines.observe(viewLifecycleOwner) { machineList ->
-            // Quando i dati cambiano, aggiorna l'adapter
-            adapter.updateList(machineList)
-        }
-
-        viewModel.error.observe(viewLifecycleOwner) { errorMsg ->
-            Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
-        }
-
-        // 3. Lancia il caricamento
-        viewModel.loadMachines()
-        //loadMachines()
     }
 
-    private fun loadMachines() {
-        val uid = auth.currentUser?.uid ?: return
-        db.collection("users").document(uid)
-            .collection("vending_machines")
-            .get()
-            .addOnSuccessListener { snapshot ->
-                machines.clear()
-                for (doc in snapshot.documents) {
-                    val m = doc.toObject(Machine::class.java)
-                    if (m != null) machines.add(m)
-                }
-                adapter.notifyDataSetChanged()
-            }
+    // In HomeFragment.kt
+
+    // 1. Modifica l'observer per tenere sincronizzata la lista locale "machines"
+    private fun setupObservers() {
+        viewModel.machines.observe(viewLifecycleOwner) { newMachines ->
+            // Aggiorna la lista locale per lo swipe
+            machines.clear()
+            machines.addAll(newMachines)
+
+            // Aggiorna l'adapter per la visualizzazione
+            adapter.updateList(newMachines)
+        }
+
+        viewModel.statusMessage.observe(viewLifecycleOwner) { message ->
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+        }
     }
 
+    // 2. Chiama questa funzione in onViewCreated()
     private fun setupSwipeToDelete() {
-        val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
-            override fun onMove(rv: RecyclerView, vh: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder) = false
-            override fun onSwiped(vh: RecyclerView.ViewHolder, dir: Int) {
-                val pos = vh.absoluteAdapterPosition
-                val machine = machines[pos]
-                confirmDeleteMachine(machine.machineId, pos)
+        // 1. CAMBIATO: ItemTouchHelper.RIGHT (invece di LEFT)
+        val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
+
+            override fun onMove(r: RecyclerView, v: RecyclerView.ViewHolder, t: RecyclerView.ViewHolder) = false
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val position = viewHolder.absoluteAdapterPosition
+                val machineToDelete = machines[position]
+                confirmDeleteMachine(machineToDelete, position)
             }
 
-            override fun onChildDraw(c: Canvas, rv: RecyclerView, vh: RecyclerView.ViewHolder,
-                                     dX: Float, dY: Float, actionState: Int, isCurrentlyActive: Boolean) {
+            override fun onChildDraw(
+                c: Canvas,
+                rv: RecyclerView,
+                vh: RecyclerView.ViewHolder,
+                dX: Float,
+                dY: Float,
+                actionState: Int,
+                isActive: Boolean
+            ) {
                 val itemView = vh.itemView
                 val paint = Paint().apply { color = Color.RED }
-                val background = RectF(itemView.right.toFloat() + dX, itemView.top.toFloat(),
-                    itemView.right.toFloat(), itemView.bottom.toFloat())
+
+                // 2. CAMBIATO: Calcolo del rettangolo rosso per swipe verso DESTRA
+                // Ora parte dal bordo sinistro (itemView.left) e si estende per dX
+                val background = RectF(
+                    itemView.left.toFloat(),
+                    itemView.top.toFloat(),
+                    itemView.left.toFloat() + dX,
+                    itemView.bottom.toFloat()
+                )
                 c.drawRect(background, paint)
+
                 val icon = ContextCompat.getDrawable(requireContext(), android.R.drawable.ic_menu_delete)
                 icon?.let {
                     val margin = (itemView.height - it.intrinsicHeight) / 2
                     val top = itemView.top + margin
                     val bottom = top + it.intrinsicHeight
-                    val left = itemView.right - margin - it.intrinsicWidth
-                    val right = itemView.right - margin
+
+                    // 3. CAMBIATO: Posizione icona (ora è allineata a SINISTRA)
+                    val left = itemView.left + margin
+                    val right = itemView.left + margin + it.intrinsicWidth
+
                     it.setBounds(left, top, right, bottom)
                     it.draw(c)
                 }
-                super.onChildDraw(c, rv, vh, dX, dY, actionState, isCurrentlyActive)
+                super.onChildDraw(c, rv, vh, dX, dY, actionState, isActive)
             }
         }
         ItemTouchHelper(swipeHandler).attachToRecyclerView(binding.machinesRecyclerView)
+    }
+
+    // 3. Dialog di conferma
+    private fun confirmDeleteMachine(machine: Machine, position: Int) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Eliminare ${machine.machineId}?")
+            .setMessage("⚠️ Verranno eliminati permanentemente anche tutti i dati e le rilevazioni di questa gettoniera.")
+            .setPositiveButton(getString(R.string.btn_delete)) { _, _ ->
+                // Chiama il ViewModel
+                viewModel.deleteMachine(machine.machineId)
+            }
+            .setNegativeButton(getString(R.string.btn_cancel)) { _, _ ->
+                // Se annulla, ripristina visivamente l'elemento swipato
+                adapter.notifyItemChanged(position)
+            }
+            .show()
+    }
+
+    private fun setupListeners() {
+        binding.addMachineFab.setOnClickListener { showAddRilevazioneDialog() }
+        binding.importFileFab.setOnClickListener {
+            startActivity(Intent(requireContext(), FilePickerActivity::class.java))
+        }
     }
 
     private fun showAddRilevazioneDialog() {
@@ -134,18 +172,19 @@ class HomeFragment : Fragment() {
             setPadding(50, 40, 50, 10)
         }
 
-        val idInput = EditText(requireContext()).apply { hint = "ID Gettoniera (es. VM1234)" }
+        val idInput = EditText(requireContext()).apply { hint = getString(R.string.dialog_machine_id) }
         val incassoInput = EditText(requireContext()).apply {
-            hint = "Incasso (€)"
+            hint = getString(R.string.dialog_incasso)
             inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
         }
         val restiInput = EditText(requireContext()).apply {
-            hint = "Resti (€)"
+            hint = getString(R.string.dialog_resti)
             inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
         }
 
+        // Bottone per caricare file EVA DTS nel dialog
         val fileButton = com.google.android.material.button.MaterialButton(requireContext()).apply {
-            text = "📄 Carica file EVA DTS"
+            text = getString(R.string.fab_import)
             setOnClickListener {
                 lastDialogIdField = idInput
                 lastDialogIncassoField = incassoInput
@@ -160,20 +199,25 @@ class HomeFragment : Fragment() {
         layout.addView(fileButton)
 
         AlertDialog.Builder(requireContext())
-            .setTitle("Nuova Rilevazione")
-            .setMessage("Compila i campi o carica un file EVA DTS:")
+            .setTitle(getString(R.string.dialog_add_title))
             .setView(layout)
-            .setPositiveButton("Salva") { _, _ ->
+            .setPositiveButton(getString(R.string.btn_save)) { _, _ ->
                 val machineId = idInput.text.toString().trim()
                 val incasso = incassoInput.text.toString().toDoubleOrNull() ?: 0.0
                 val resti = restiInput.text.toString().toDoubleOrNull() ?: 0.0
-                if (machineId.isNotEmpty()) addRilevazione(machineId, incasso, resti)
-                else Toast.makeText(requireContext(), "ID obbligatorio", Toast.LENGTH_SHORT).show()
+
+                if (machineId.isNotEmpty()) {
+                    // Chiamata al ViewModel invece che a Firebase diretto
+                    viewModel.addRilevazione(machineId, incasso, resti)
+                } else {
+                    Toast.makeText(requireContext(), "ID obbligatorio", Toast.LENGTH_SHORT).show()
+                }
             }
-            .setNegativeButton("Annulla", null)
+            .setNegativeButton(getString(R.string.btn_cancel), null)
             .show()
     }
 
+    // --- Gestione File Picker (rimasta nel Fragment perché è UI) ---
     private fun openFilePicker() {
         val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
             type = "*/*"
@@ -193,73 +237,10 @@ class HomeFragment : Fragment() {
                     parsed.machineId?.let { lastDialogIdField?.setText(it) }
                     parsed.incassi["CA3"]?.let { lastDialogIncassoField?.setText(it.toString()) }
                     parsed.resti.values.firstOrNull()?.let { lastDialogRestiField?.setText(it.toString()) }
-                    Toast.makeText(requireContext(), "File EVA DTS analizzato ✅", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Dati caricati dal file ✅", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Errore file: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    private fun addRilevazione(machineId: String, incasso: Double, resti: Double) {
-        val uid = auth.currentUser?.uid ?: return
-        val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
-        val rilevazione = mapOf(
-            "timestamp" to timestamp,
-            "incasso" to incasso,
-            "resti" to resti
-        )
-
-        val machineRef = db.collection("users").document(uid)
-            .collection("vending_machines").document(machineId)
-
-        machineRef.get().addOnSuccessListener { doc ->
-            if (!doc.exists()) {
-                val newMachine = mapOf(
-                    "machineId" to machineId,
-                    "lastUpdate" to timestamp,
-                    "totalRilevazioni" to 1
-                )
-                machineRef.set(newMachine)
-            } else {
-                val total = doc.getLong("totalRilevazioni") ?: 0
-                machineRef.update("lastUpdate", timestamp, "totalRilevazioni", total + 1)
-            }
-
-            machineRef.collection("rilevazioni").add(rilevazione)
-                .addOnSuccessListener {
-                    Toast.makeText(requireContext(), "Rilevazione salvata ✅", Toast.LENGTH_SHORT).show()
-                    loadMachines()
-                }
-        }
-    }
-
-    private fun confirmDeleteMachine(machineId: String, position: Int) {
-        AlertDialog.Builder(requireContext())
-            .setTitle("Eliminare la gettoniera $machineId?")
-            .setMessage("⚠️ Verranno eliminati tutti i dati e le rilevazioni associate.")
-            .setPositiveButton("Elimina") { _, _ ->
-                deleteMachineAndRilevazioni(machineId, position)
-            }
-            .setNegativeButton("Annulla") { _, _ ->
-                adapter.notifyItemChanged(position)
-            }
-            .show()
-    }
-
-    private fun deleteMachineAndRilevazioni(machineId: String, position: Int) {
-        val uid = auth.currentUser?.uid ?: return
-        val machineRef = db.collection("users").document(uid)
-            .collection("vending_machines").document(machineId)
-        machineRef.collection("rilevazioni").get().addOnSuccessListener { snapshot ->
-            val batch = db.batch()
-            snapshot.documents.forEach { batch.delete(it.reference) }
-            batch.commit().addOnSuccessListener {
-                machineRef.delete().addOnSuccessListener {
-                    machines.removeAt(position)
-                    adapter.notifyItemRemoved(position)
-                    Toast.makeText(requireContext(), "Gettoniera $machineId eliminata ✅", Toast.LENGTH_SHORT).show()
-                }
             }
         }
     }
@@ -269,4 +250,3 @@ class HomeFragment : Fragment() {
         _binding = null
     }
 }
-

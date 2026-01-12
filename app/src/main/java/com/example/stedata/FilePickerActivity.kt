@@ -11,6 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.stedata.databinding.ActivityFilePickerBinding
 import com.example.stedata.models.EvaDtsReport
 import com.example.stedata.parser.EvaDtsParser
+import com.example.stedata.repository.MachineRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
@@ -25,6 +26,7 @@ class FilePickerActivity : AppCompatActivity() {
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
     private val parser = EvaDtsParser()
+    private val repository = MachineRepository()
 
     private val filePickerLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -143,7 +145,7 @@ class FilePickerActivity : AppCompatActivity() {
         }
     }
 
-    private fun saveToFirebase(report: EvaDtsReport) {
+    /*private fun saveToFirebase(report: EvaDtsReport) {
         val uid = auth.currentUser?.uid ?: return
         val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
         val machineId = report.machineInfo.assetNumber ?: report.machineInfo.serialNumber
@@ -218,6 +220,36 @@ class FilePickerActivity : AppCompatActivity() {
                 }
         }
     }
+
+
+     */
+
+    private fun saveToFirebase(report: EvaDtsReport) {
+        val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
+        val machineId = report.machineInfo.assetNumber ?: report.machineInfo.serialNumber
+
+        // Prepariamo la mappa dati (identica struttura del ViewModel!)
+        val rilevazioneMap = hashMapOf<String, Any>(
+            "timestamp" to timestamp,
+            "machineId" to machineId,
+            "incasso" to (report.salesData.paidVendValueInit ?: 0.0),
+            "numeroVendite" to (report.salesData.paidVendCountInit ?: 0),
+            "contanti" to (report.cashData.cashSalesValueInit ?: 0.0),
+            "file" to (report.header.communicationId ?: "")
+            // ... aggiungi altri campi se vuoi ...
+        )
+
+        lifecycleScope.launch {
+            try {
+                repository.saveRilevazione(machineId, rilevazioneMap)
+                Toast.makeText(this@FilePickerActivity, "✅ Salvato con successo!", Toast.LENGTH_LONG).show()
+                finish()
+            } catch (e: Exception) {
+                showError("Errore nel salvataggio: ${e.message}")
+            }
+        }
+    }
+
 
     private fun showError(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()

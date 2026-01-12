@@ -1,109 +1,104 @@
 package com.example.stedata
 
+import android.graphics.*
 import android.os.Bundle
+import android.widget.Toast
+import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.stedata.adapters.RilevazioneAdapter
 import com.example.stedata.databinding.ActivityMachineDetailBinding
 import com.example.stedata.models.Rilevazione
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import androidx.appcompat.app.AlertDialog
-import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.recyclerview.widget.RecyclerView
-import android.graphics.*
-import android.widget.Toast
-import androidx.core.content.ContextCompat
-
-
 
 class MachineDetailActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMachineDetailBinding
-    private lateinit var db: FirebaseFirestore
-    private lateinit var auth: FirebaseAuth
-    private val rilevazioni = mutableListOf<Rilevazione>()
+    private val viewModel: MachineDetailViewModel by viewModels() // Usa il ViewModel
+
+    // Lista locale per l'adapter (aggiornata dal LiveData)
+    private val rilevazioniList = mutableListOf<Rilevazione>()
     private lateinit var adapter: RilevazioneAdapter
+    private lateinit var machineId: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMachineDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val machineId = intent.getStringExtra("MACHINE_ID") ?: return
+        machineId = intent.getStringExtra("MACHINE_ID") ?: return
         binding.toolbar.title = "Gettoniera $machineId"
+        setSupportActionBar(binding.toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true) // Freccia indietro
 
-        db = FirebaseFirestore.getInstance()
-        auth = FirebaseAuth.getInstance()
+        setupRecyclerView()
+        setupObservers()
 
-        adapter = RilevazioneAdapter(rilevazioni) { rilevazione ->
+        // Carica i dati
+        viewModel.loadRilevazioni(machineId)
+    }
+
+    private fun setupRecyclerView() {
+        adapter = RilevazioneAdapter(rilevazioniList) { rilevazione ->
             showRilevazioneDialog(rilevazione)
         }
         binding.rilevazioniRecyclerView.layoutManager = LinearLayoutManager(this)
         binding.rilevazioniRecyclerView.adapter = adapter
 
-
-        loadRilevazioni(machineId)
+        // Collega lo swipe
         ItemTouchHelper(swipeHandler).attachToRecyclerView(binding.rilevazioniRecyclerView)
     }
 
-    private fun loadRilevazioni(machineId: String) {
-        val uid = auth.currentUser?.uid ?: return
-        db.collection("users").document(uid)
-            .collection("vending_machines").document(machineId)
-            .collection("rilevazioni")
-            .get()
-            .addOnSuccessListener { snapshot ->
-                rilevazioni.clear()
-                for (doc in snapshot.documents) {
-                    val r = doc.toObject(Rilevazione::class.java)
-                    if (r != null) rilevazioni.add(r)
-                }
-                adapter.notifyDataSetChanged()
-            }
+    private fun setupObservers() {
+        viewModel.rilevazioni.observe(this) { list ->
+            rilevazioniList.clear()
+            rilevazioniList.addAll(list)
+            adapter.notifyDataSetChanged()
+        }
+
+        viewModel.statusMessage.observe(this) { msg ->
+            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+        }
     }
+
     private fun showRilevazioneDialog(r: Rilevazione) {
+        // ... (Codice identico al tuo originale per mostrare il dialog) ...
         val message = """
-         ${r.timestamp}
-        
-        Incasso: €${r.incasso}
-        Resti: €${r.resti}
-        
-        File EVA DTS:
-        ${r.file}
-    """.trimIndent()
+             Data: ${r.timestamp}
+             Incasso: €${r.incasso}
+             Resti: €${r.resti}
+             File: ${if(r.file.isNotEmpty()) r.file else "Nessun file"}
+         """.trimIndent()
 
         AlertDialog.Builder(this)
-            .setTitle("Dettagli rilevazione")
+            .setTitle("Dettagli")
             .setMessage(message)
             .setPositiveButton("Chiudi", null)
             .show()
     }
-    // 🔹 Swipe sinistro per eliminare
-    val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
-        override fun onMove(
-            recyclerView: RecyclerView,
-            viewHolder: RecyclerView.ViewHolder,
-            target: RecyclerView.ViewHolder
-        ): Boolean = false
+
+    // Gestione Swipe (UI)
+    private val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
+        override fun onMove(rv: RecyclerView, vh: RecyclerView.ViewHolder, t: RecyclerView.ViewHolder) = false
 
         override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-            val position = viewHolder.adapterPosition
-            val rilevazione = rilevazioni[position]
-            deleteRilevazione(rilevazione, position)
+            val position = viewHolder.absoluteAdapterPosition
+            val rilevazione = rilevazioniList[position]
+
+            // Chiamata al ViewModel per eliminare
+            viewModel.deleteRilevazione(machineId, rilevazione)
+
+            // Nota: L'adapter si aggiornerà quando il ViewModel ricarica i dati,
+            // ma per evitare "buchi" visivi immediati potresti chiamare notifyItemChanged(position)
+            // nel caso l'eliminazione fallisca. Qui ci fidiamo del reload.
         }
 
-        override fun onChildDraw(
-            c: Canvas,
-            recyclerView: RecyclerView,
-            viewHolder: RecyclerView.ViewHolder,
-            dX: Float,
-            dY: Float,
-            actionState: Int,
-            isCurrentlyActive: Boolean
-        ) {
-            // Sfondo rosso + icona cestino
-            val itemView = viewHolder.itemView
+        override fun onChildDraw(c: Canvas, rv: RecyclerView, vh: RecyclerView.ViewHolder, dX: Float, dY: Float, actionState: Int, isActive: Boolean) {
+            // ... (Copia il tuo codice di disegno sfondo rosso e icona cestino qui) ...
+            val itemView = vh.itemView
             val paint = Paint()
             paint.color = Color.RED
             val background = RectF(
@@ -111,7 +106,6 @@ class MachineDetailActivity : AppCompatActivity() {
                 itemView.right.toFloat(), itemView.bottom.toFloat()
             )
             c.drawRect(background, paint)
-
             val icon = ContextCompat.getDrawable(this@MachineDetailActivity, android.R.drawable.ic_menu_delete)
             icon?.let {
                 val iconMargin = (itemView.height - it.intrinsicHeight) / 2
@@ -122,46 +116,12 @@ class MachineDetailActivity : AppCompatActivity() {
                 it.setBounds(iconLeft, iconTop, iconRight, iconBottom)
                 it.draw(c)
             }
-
-            super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+            super.onChildDraw(c, rv, vh, dX, dY, actionState, isActive)
         }
     }
 
-
-
-    private fun deleteRilevazione(r: Rilevazione, position: Int) {
-        val uid = auth.currentUser?.uid ?: return
-        val machineId = intent.getStringExtra("MACHINE_ID") ?: return
-
-        val db = FirebaseFirestore.getInstance()
-        val rilevazioniRef = db.collection("users").document(uid)
-            .collection("vending_machines").document(machineId)
-            .collection("rilevazioni")
-
-        // Cerca la rilevazione con timestamp e importi uguali (modo semplice per identificare)
-        rilevazioniRef
-            .whereEqualTo("timestamp", r.timestamp)
-            .whereEqualTo("incasso", r.incasso)
-            .get()
-            .addOnSuccessListener { snapshot ->
-                if (!snapshot.isEmpty) {
-                    val docId = snapshot.documents.first().id
-                    rilevazioniRef.document(docId).delete()
-                        .addOnSuccessListener {
-                            rilevazioni.removeAt(position)
-                            adapter.notifyItemRemoved(position)
-                            Toast.makeText(this, "Rilevazione eliminata", Toast.LENGTH_SHORT).show()
-                        }
-                } else {
-                    adapter.notifyItemChanged(position)
-                    Toast.makeText(this, "Errore: rilevazione non trovata", Toast.LENGTH_SHORT).show()
-                }
-            }
-            .addOnFailureListener {
-                adapter.notifyItemChanged(position)
-                Toast.makeText(this, "Errore: ${it.message}", Toast.LENGTH_SHORT).show()
-            }
+    override fun onSupportNavigateUp(): Boolean {
+        finish()
+        return true
     }
-
-
 }

@@ -35,4 +35,5 @@ class MachineAdapter(
         machines.addAll(newMachines)
         notifyDataSetChanged()
     }
+
 }

@@ -6,17 +6,14 @@
         android:id="@+id/drawerLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fitsSystemWindows="true"
-        >
+        android:fitsSystemWindows="true">
 
-        <!-- CONTENUTO PRINCIPALE -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
             android:background="@color/md_theme_light_background">
 
-            <!-- TOOLBAR -->
             <com.google.android.material.appbar.MaterialToolbar
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
@@ -27,24 +24,18 @@
                 app:titleCentered="true"
                 app:navigationIcon="@android:drawable/ic_menu_more"
                 android:elevation="4dp" />
-            <!-- <FrameLayout
-                android:id="@+id/fragmentContainer"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1" /> -->
+
             <androidx.fragment.app.FragmentContainerView
                 android:id="@+id/nav_host_fragment"
                 android:name="androidx.navigation.fragment.NavHostFragment"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
                 app:defaultNavHost="true"
                 app:navGraph="@navigation/nav_graph" />
 
-
-            <!-- CONTENUTO CENTRALE -->
         </LinearLayout>
 
-        <!-- MENU LATERALE -->
         <com.google.android.material.navigation.NavigationView
             android:id="@+id/navigationView"
             android:layout_width="280dp"

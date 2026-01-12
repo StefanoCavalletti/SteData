@@ -29,10 +29,8 @@ class HomeActivity : AppCompatActivity() {
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Init Firebase
         auth = FirebaseAuth.getInstance()
 
-        // Setup Toolbar
         setSupportActionBar(binding.toolbar)
 
         // 1. Setup Navigation Component
@@ -43,8 +41,7 @@ class HomeActivity : AppCompatActivity() {
         val drawerLayout: DrawerLayout = binding.drawerLayout
         val navView: NavigationView = binding.navigationView
 
-        // Configura la AppBar per lavorare col Drawer
-        // Definisci qui gli ID dei fragment "top-level" (dove mostrare l'hamburger invece della freccia indietro)
+        // Configura la AppBar
         appBarConfiguration = AppBarConfiguration(
             setOf(R.id.nav_home, R.id.nav_settings),
             drawerLayout
@@ -53,38 +50,32 @@ class HomeActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
-        // 2. RECUPERO FUNZIONALITÀ MANCANTE: Mostra email utente nell'header
+        // 2. Mostra email utente nell'header
         val headerView = navView.getHeaderView(0)
         val navUserEmail = headerView.findViewById<TextView>(R.id.headerEmail)
         val user = auth.currentUser
         navUserEmail.text = user?.email ?: "Utente anonimo"
 
-        // 3. Gestione personalizzata del menu (per il Logout)
+        // 3. Gestione Logout
         navView.setNavigationItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.nav_logout -> {
-                    // Logica di logout originale
-                    auth.signOut()
-                    Toast.makeText(this, "Logout effettuato", Toast.LENGTH_SHORT).show()
-                    val intent = Intent(this, LoginActivity::class.java)
-                    startActivity(intent)
-                    finish()
-                    true
+            if (item.itemId == R.id.nav_logout) {
+                auth.signOut()
+                Toast.makeText(this, "Logout effettuato", Toast.LENGTH_SHORT).show()
+                val intent = Intent(this, LoginActivity::class.java)
+                startActivity(intent)
+                finish()
+                true
+            } else {
+                // Lascia che Navigation Component gestisca Home e Settings
+                val handled = NavigationUI.onNavDestinationSelected(item, navController)
+                if (handled) {
+                    drawerLayout.closeDrawers()
                 }
-                else -> {
-                    // Per le altre voci (Home, Settings), lascia fare al Navigation Component
-                    // Chiude il drawer e naviga
-                    val handled = NavigationUI.onNavDestinationSelected(item, navController)
-                    if (handled) {
-                        drawerLayout.closeDrawers()
-                    }
-                    handled
-                }
+                handled
             }
         }
     }
 
-    // Gestisce il click sul tasto "hamburger" o "indietro" nella toolbar
     override fun onSupportNavigateUp(): Boolean {
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
