@@ -16,6 +16,17 @@ import androidx.navigation.ui.setupWithNavController
 import com.example.stedata.databinding.ActivityHomeBinding
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import com.example.stedata.workers.ReminderWorker
+import java.util.concurrent.TimeUnit
+import java.util.Calendar
 
 class HomeActivity : AppCompatActivity() {
 
@@ -23,6 +34,16 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var navController: NavController
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var auth: FirebaseAuth
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            scheduleDailyNotification()
+        } else {
+            Toast.makeText(this, "Notifiche disabilitate", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,10 +95,57 @@ class HomeActivity : AppCompatActivity() {
                 handled
             }
         }
+        checkAndScheduleNotification()
     }
 
     override fun onSupportNavigateUp(): Boolean {
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
+    }
+
+    private fun checkAndScheduleNotification() {
+        // Su Android 13 (API 33+) serve il permesso esplicito
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+                PackageManager.PERMISSION_GRANTED) {
+                scheduleDailyNotification()
+            } else {
+                // Chiede il permesso
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        } else {
+            // Su versioni vecchie il permesso è automatico all'installazione
+            scheduleDailyNotification()
+        }
+    }
+
+    private fun scheduleDailyNotification() {
+        // Pianifica il worker per eseguire ogni 24 ore
+        val workRequest = PeriodicWorkRequestBuilder<ReminderWorker>(24, TimeUnit.HOURS)
+            .setInitialDelay(calculateInitialDelay(), TimeUnit.MILLISECONDS) // Opzionale: per impostare l'orario
+            .build()
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "DailyReminder",
+            ExistingPeriodicWorkPolicy.KEEP, // KEEP: se esiste già, non lo sostituisce (evita duplicati)
+            workRequest
+        )
+    }
+
+    // Calcola quanto manca alle ore 18:00
+    private fun calculateInitialDelay(): Long {
+        val calendar = Calendar.getInstance()
+        val now = System.currentTimeMillis()
+
+        // Imposta orario target: 18:00
+        calendar.set(Calendar.HOUR_OF_DAY, 18)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+
+        if (calendar.timeInMillis <= now) {
+            // Se sono già passate le 18, programma per domani
+            calendar.add(Calendar.DAY_OF_YEAR, 1)
+        }
+        return calendar.timeInMillis - now
     }
 }
 
