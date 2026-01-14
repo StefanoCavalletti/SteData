@@ -3,11 +3,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/nav_home"> <fragment
-    android:id="@+id/nav_home"
-    android:name="com.example.stedata.HomeFragment"
-    android:label="Home"
-    tools:layout="@layout/fragment_home" />
+    app:startDestination="@id/nav_home">
+
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="com.example.stedata.HomeFragment"
+        android:label="Home"
+        tools:layout="@layout/fragment_home">
+
+    </fragment>
 
     <fragment
         android:id="@+id/nav_settings"
@@ -19,5 +23,16 @@
         android:id="@+id/nav_logout"
         android:name="com.example.stedata.LoginActivity"
         android:label="Logout" />
+
+    <activity
+        android:id="@+id/nav_machine_detail"
+        android:name="com.example.stedata.MachineDetailActivity"
+        android:label="Dettagli Gettoniera"
+        tools:layout="@layout/activity_machine_detail">
+
+        <argument
+            android:name="MACHINE_ID"
+            app:argType="string" />
+    </activity>
 
 </navigation>
