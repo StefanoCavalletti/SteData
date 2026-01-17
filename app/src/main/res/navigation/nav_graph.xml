@@ -11,28 +11,48 @@
         android:label="Home"
         tools:layout="@layout/fragment_home">
 
+        <action
+            android:id="@+id/action_nav_home_to_nav_settings"
+            app:destination="@id/nav_settings" />
+        <action
+            android:id="@+id/action_nav_home_to_nav_file_picker"
+            app:destination="@id/nav_file_picker" />
+        <action
+            android:id="@+id/action_nav_home_to_nav_machine_detail"
+            app:destination="@id/nav_machine_detail" />
     </fragment>
 
     <fragment
         android:id="@+id/nav_settings"
         android:name="com.example.stedata.SettingsFragment"
         android:label="Impostazioni"
-        tools:layout="@layout/fragment_settings" />
+        tools:layout="@layout/fragment_settings" >
+        <action
+            android:id="@+id/action_nav_settings_to_nav_logout"
+            app:destination="@id/nav_logout" />
+    </fragment>
 
     <activity
         android:id="@+id/nav_logout"
         android:name="com.example.stedata.LoginActivity"
-        android:label="Logout" />
+        android:label="Logout"
+        tools:layout="@layout/fragment_login"/>
 
-    <activity
+    <fragment
         android:id="@+id/nav_machine_detail"
-        android:name="com.example.stedata.MachineDetailActivity"
+        android:name="com.example.stedata.MachineDetailFragment"
         android:label="Dettagli Gettoniera"
-        tools:layout="@layout/activity_machine_detail">
+        tools:layout="@layout/fragment_machine_detail">
 
         <argument
-            android:name="MACHINE_ID"
+            android:name="machineId"
             app:argType="string" />
-    </activity>
+    </fragment>
+
+    <activity
+        android:id="@+id/nav_file_picker"
+        android:name="com.example.stedata.FilePickerActivity"
+        android:label="Importa File"
+        tools:layout="@layout/activity_file_picker" />
 
 </navigation>

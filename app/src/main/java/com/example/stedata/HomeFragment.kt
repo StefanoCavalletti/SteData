@@ -14,6 +14,7 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.navigation.fragment.findNavController
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -24,7 +25,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.stedata.adapters.MachineAdapter
 import com.example.stedata.databinding.FragmentHomeBinding
 import com.example.stedata.models.Machine
-import com.example.stedata.utils.EvaDtsParser
 
 class HomeFragment : Fragment() {
 
@@ -36,12 +36,6 @@ class HomeFragment : Fragment() {
 
     private val machines = mutableListOf<Machine>()
     private lateinit var adapter: MachineAdapter
-
-    // Variabili per il Dialog (file picker)
-    private var lastDialogIdField: EditText? = null
-    private var lastDialogIncassoField: EditText? = null
-    private var lastDialogRestiField: EditText? = null
-    private val FILE_PICKER_CODE = 202
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
@@ -62,9 +56,9 @@ class HomeFragment : Fragment() {
 
     private fun setupRecyclerView() {
         adapter = MachineAdapter(machines) { machine ->
-            val intent = Intent(requireContext(), MachineDetailActivity::class.java)
-            intent.putExtra("MACHINE_ID", machine.machineId)
-            startActivity(intent)
+            val action = HomeFragmentDirections.actionNavHomeToNavMachineDetail(machine.machineId)
+
+            findNavController().navigate(action)
         }
         binding.machinesRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.machinesRecyclerView.adapter = adapter
@@ -162,7 +156,8 @@ class HomeFragment : Fragment() {
     private fun setupListeners() {
         binding.addMachineFab.setOnClickListener { showAddRilevazioneDialog() }
         binding.importFileFab.setOnClickListener {
-            startActivity(Intent(requireContext(), FilePickerActivity::class.java))
+            //startActivity(Intent(requireContext(), FilePickerActivity::class.java))
+            findNavController().navigate(R.id.nav_file_picker)
         }
     }
 
@@ -172,7 +167,9 @@ class HomeFragment : Fragment() {
             setPadding(50, 40, 50, 10)
         }
 
-        val idInput = EditText(requireContext()).apply { hint = getString(R.string.dialog_machine_id) }
+        val idInput = EditText(requireContext()).apply {
+            hint = getString(R.string.dialog_machine_id)
+        }
         val incassoInput = EditText(requireContext()).apply {
             hint = getString(R.string.dialog_incasso)
             inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
@@ -182,21 +179,9 @@ class HomeFragment : Fragment() {
             inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
         }
 
-        // Bottone per caricare file EVA DTS nel dialog
-        val fileButton = com.google.android.material.button.MaterialButton(requireContext()).apply {
-            text = getString(R.string.fab_import)
-            setOnClickListener {
-                lastDialogIdField = idInput
-                lastDialogIncassoField = incassoInput
-                lastDialogRestiField = restiInput
-                openFilePicker()
-            }
-        }
-
         layout.addView(idInput)
         layout.addView(incassoInput)
         layout.addView(restiInput)
-        layout.addView(fileButton)
 
         AlertDialog.Builder(requireContext())
             .setTitle(getString(R.string.dialog_add_title))
@@ -207,7 +192,6 @@ class HomeFragment : Fragment() {
                 val resti = restiInput.text.toString().toDoubleOrNull() ?: 0.0
 
                 if (machineId.isNotEmpty()) {
-                    // Chiamata al ViewModel invece che a Firebase diretto
                     viewModel.addRilevazione(machineId, incasso, resti)
                 } else {
                     Toast.makeText(requireContext(), "ID obbligatorio", Toast.LENGTH_SHORT).show()
@@ -215,34 +199,6 @@ class HomeFragment : Fragment() {
             }
             .setNegativeButton(getString(R.string.btn_cancel), null)
             .show()
-    }
-
-    // --- Gestione File Picker (rimasta nel Fragment perché è UI) ---
-    private fun openFilePicker() {
-        val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
-            type = "*/*"
-            putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("text/plain", "application/octet-stream"))
-        }
-        startActivityForResult(Intent.createChooser(intent, "Seleziona file EVA DTS"), FILE_PICKER_CODE)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == FILE_PICKER_CODE && resultCode == AppCompatActivity.RESULT_OK) {
-            val uri = data?.data ?: return
-            try {
-                requireContext().contentResolver.openInputStream(uri)?.use { stream ->
-                    val content = stream.bufferedReader().use { it.readText() }
-                    val parsed = EvaDtsParser.parse(content)
-                    parsed.machineId?.let { lastDialogIdField?.setText(it) }
-                    parsed.incassi["CA3"]?.let { lastDialogIncassoField?.setText(it.toString()) }
-                    parsed.resti.values.firstOrNull()?.let { lastDialogRestiField?.setText(it.toString()) }
-                    Toast.makeText(requireContext(), "Dati caricati dal file ✅", Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Errore file: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-        }
     }
 
     override fun onDestroyView() {

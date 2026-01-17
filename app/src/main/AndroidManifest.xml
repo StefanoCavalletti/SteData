@@ -14,19 +14,13 @@
         android:theme="@style/Theme.SteData"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
-            android:exported="true"
-            android:theme="@style/Theme.SteData">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            android:name=".LoginActivity"
+            android:exported="true"> <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
         </activity>
-        <activity android:name=".LoginActivity" />
-        <activity android:name=".RegisterActivity" />
         <activity android:name=".HomeActivity" />
-        <activity android:name=".MachineDetailActivity" />
         <activity
             android:name=".FilePickerActivity"
             android:label="Importa File EVA DTS"
