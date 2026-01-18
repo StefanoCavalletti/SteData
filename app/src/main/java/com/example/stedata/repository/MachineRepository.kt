@@ -1,7 +1,6 @@
 package com.example.stedata.repository
 
 import com.example.stedata.models.Machine
-import com.example.stedata.models.Rilevazione
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -24,7 +23,7 @@ class MachineRepository {
         return snapshot.documents.mapNotNull { it.toObject(Machine::class.java) }
     }
 
-    // SALVA RILEVAZIONE (Logica unificata!)
+    // SALVA RILEVAZIONE
     suspend fun saveRilevazione(machineId: String, rilevazione: Map<String, Any>) {
         val machineRef = db.collection("users").document(uid)
             .collection("vending_machines").document(machineId)

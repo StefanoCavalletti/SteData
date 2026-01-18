@@ -2,6 +2,12 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <data>
+        <variable
+            name="viewModel"
+            type="com.example.stedata.AuthViewModel" />
+    </data>
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -25,7 +31,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Crea Account"
+                android:text="@string/register_title"
                 android:textSize="24sp"
                 android:textColor="@color/md_theme_light_primary"
                 android:fontFamily="sans-serif-medium"
@@ -34,9 +40,10 @@
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Nome">
+                android:hint="@string/register_name_hint">
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/nameInput"
+                    android:text="@={viewModel.name}"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="textPersonName" />
@@ -45,10 +52,11 @@
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Email"
+                android:hint="@string/email_hint"
                 android:layout_marginTop="16dp">
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/emailInput"
+                    android:text="@={viewModel.email}"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="textEmailAddress" />
@@ -57,10 +65,11 @@
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Password"
+                android:hint="@string/password_hint"
                 android:layout_marginTop="16dp">
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/passwordInput"
+                    android:text="@={viewModel.password}"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="textPassword" />
@@ -69,10 +78,11 @@
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Conferma Password"
+                android:hint="@string/register_confirm_password_hint"
                 android:layout_marginTop="16dp">
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/confirmPasswordInput"
+                    android:text="@={viewModel.confirmPassword}"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="textPassword" />
@@ -82,7 +92,9 @@
                 android:id="@+id/registerButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Registrati"
+                android:text="@{viewModel.isLoading ? @string/register_loading : @string/register_btn}"
+                android:enabled="@{!viewModel.isLoading}"
+                android:onClick="@{() -> viewModel.register()}"
                 style="?attr/materialButtonStyle"
                 app:backgroundTint="@color/md_theme_light_primary"
                 android:textColor="@color/md_theme_light_onPrimary"
@@ -92,10 +104,11 @@
                 android:id="@+id/toLoginText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Hai già un account? Accedi"
+                android:text="@string/register_to_login_prompt"
                 android:textAlignment="center"
                 android:textColor="@color/md_theme_light_secondary"
                 android:layout_marginTop="24dp"
-                android:padding="8dp"/> </LinearLayout>
+                android:padding="8dp"/>
+        </LinearLayout>
     </ScrollView>
 </layout>

@@ -13,7 +13,7 @@
             android:id="@+id/settingsTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Impostazioni"
+            android:text="@string/settings_title"
             android:textColor="@color/md_theme_light_primary"
             android:textSize="22sp"
             android:fontFamily="sans-serif-medium"
@@ -23,7 +23,7 @@
             android:id="@+id/userEmail"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Email utente"
+            android:text="@string/user_email_placeholder"
             android:textSize="16sp"
             android:textColor="@color/md_theme_light_onSurface"
             android:layout_marginBottom="24dp" />
@@ -33,7 +33,7 @@
             style="?attr/materialButtonOutlinedStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Cambia tema"
+            android:text="@string/settings_theme_btn"
             android:textColor="@color/md_theme_light_primary"
             android:layout_marginBottom="16dp" />
 
@@ -42,7 +42,7 @@
             style="?attr/materialButtonStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Logout"
+            android:text="@string/settings_logout_btn"
             app:backgroundTint="@color/md_theme_light_secondary"
             android:textColor="@color/md_theme_light_onPrimary" />
 

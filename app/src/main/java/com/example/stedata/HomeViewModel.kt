@@ -6,8 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stedata.models.Machine
 import com.example.stedata.repository.MachineRepository
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -15,15 +13,13 @@ import java.util.Locale
 
 class HomeViewModel : ViewModel() {
 
-    private val repository = MachineRepository() // Istanzia il repo
-    private val db = FirebaseFirestore.getInstance()
-    private val auth = FirebaseAuth.getInstance()
+    private val repository = MachineRepository()
 
-    // LiveData per la lista delle macchine (la UI osserva questo)
+    // LiveData per la lista delle gettoniere
     private val _machines = MutableLiveData<List<Machine>>()
     val machines: LiveData<List<Machine>> get() = _machines
 
-    // LiveData per messaggi di stato (es. "Salvataggio riuscito", "Errore...")
+    // LiveData per messaggi di stato
     private val _statusMessage = MutableLiveData<String>()
     val statusMessage: LiveData<String> get() = _statusMessage
 
@@ -49,7 +45,7 @@ class HomeViewModel : ViewModel() {
                     "file" to ""
                 )
                 repository.saveRilevazione(machineId, dati)
-                _statusMessage.value = "Rilevazione salvata ✅"
+                _statusMessage.value = "Rilevazione salvata"
                 loadMachines()
             } catch (e: Exception) {
                 _statusMessage.value = "Errore salvataggio: ${e.message}"
@@ -61,7 +57,7 @@ class HomeViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 repository.deleteMachine(machineId)
-                _statusMessage.value = "Gettoniera eliminata 🗑️"
+                _statusMessage.value = "Gettoniera eliminata"
                 loadMachines()
             } catch (e: Exception) {
                 _statusMessage.value = "Errore eliminazione: ${e.message}"

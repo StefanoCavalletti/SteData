@@ -1,7 +1,6 @@
 package com.example.stedata
 
 import android.app.AlertDialog
-import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -15,7 +14,6 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.navigation.fragment.findNavController
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -31,7 +29,7 @@ class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
-    // 1. Inizializza il ViewModel
+    // inizializzo viewmodel
     private val viewModel: HomeViewModel by viewModels()
 
     private val machines = mutableListOf<Machine>()
@@ -46,11 +44,11 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         setupRecyclerView()
-        setupObservers() // Qui colleghiamo il ViewModel
+        setupObservers()
         setupListeners()
         setupSwipeToDelete()
 
-        // Carica i dati all'avvio
+        //carico i dati all'avvio
         viewModel.loadMachines()
     }
 
@@ -65,16 +63,13 @@ class HomeFragment : Fragment() {
         setupSwipeToDelete()
     }
 
-    // In HomeFragment.kt
-
-    // 1. Modifica l'observer per tenere sincronizzata la lista locale "machines"
     private fun setupObservers() {
         viewModel.machines.observe(viewLifecycleOwner) { newMachines ->
-            // Aggiorna la lista locale per lo swipe
+            // aggiorno la lista locale
             machines.clear()
             machines.addAll(newMachines)
 
-            // Aggiorna l'adapter per la visualizzazione
+            // aggiorna l'adapter per la visualizzazione
             adapter.updateList(newMachines)
         }
 
@@ -83,9 +78,8 @@ class HomeFragment : Fragment() {
         }
     }
 
-    // 2. Chiama questa funzione in onViewCreated()
+    // setup dello swipe per cancellare le gettoniere
     private fun setupSwipeToDelete() {
-        // 1. CAMBIATO: ItemTouchHelper.RIGHT (invece di LEFT)
         val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
 
             override fun onMove(r: RecyclerView, v: RecyclerView.ViewHolder, t: RecyclerView.ViewHolder) = false
@@ -108,8 +102,7 @@ class HomeFragment : Fragment() {
                 val itemView = vh.itemView
                 val paint = Paint().apply { color = Color.RED }
 
-                // 2. CAMBIATO: Calcolo del rettangolo rosso per swipe verso DESTRA
-                // Ora parte dal bordo sinistro (itemView.left) e si estende per dX
+                //Calcolo del rettangolo rosso per
                 val background = RectF(
                     itemView.left.toFloat(),
                     itemView.top.toFloat(),
@@ -124,7 +117,7 @@ class HomeFragment : Fragment() {
                     val top = itemView.top + margin
                     val bottom = top + it.intrinsicHeight
 
-                    // 3. CAMBIATO: Posizione icona (ora è allineata a SINISTRA)
+                    //Posizione icona
                     val left = itemView.left + margin
                     val right = itemView.left + margin + it.intrinsicWidth
 
@@ -137,7 +130,7 @@ class HomeFragment : Fragment() {
         ItemTouchHelper(swipeHandler).attachToRecyclerView(binding.machinesRecyclerView)
     }
 
-    // 3. Dialog di conferma
+    //dialog di conferma
     private fun confirmDeleteMachine(machine: Machine, position: Int) {
         AlertDialog.Builder(requireContext())
             .setTitle("Eliminare ${machine.machineId}?")

@@ -1,64 +1,93 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout>
-<com.google.android.material.card.MaterialCardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    app:cardElevation="2dp"
-    app:cardCornerRadius="10dp"
-    android:clickable="true"
-    android:focusable="true">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <LinearLayout
+    <data>
+        <import type="android.view.View" />
+        <variable
+            name="rilevazione"
+            type="com.example.stedata.models.Rilevazione" />
+    </data>
+
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_marginHorizontal="8dp"
+        android:layout_marginVertical="4dp"
+        app:cardElevation="2dp"
+        app:cardCornerRadius="12dp"
+        android:clickable="true"
+        android:focusable="true">
 
-        <!-- Timestamp / titolo -->
-        <TextView
-            android:id="@+id/timestampText"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="2025-10-14 15:30"
-            android:textStyle="bold"
-            android:textColor="@color/md_theme_light_primary"
-            android:textSize="16sp" />
+            android:orientation="vertical"
+            android:padding="16dp">
 
-        <!-- Incasso -->
-        <TextView
-            android:id="@+id/incassoText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Incasso: €2700"
-            android:textColor="@color/md_theme_light_onSurface"
-            android:textSize="14sp"
-            android:layout_marginTop="6dp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-        <!-- Resti -->
-        <TextView
-            android:id="@+id/restiText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Resti: €300"
-            android:textColor="@color/md_theme_light_onSurface"
-            android:textSize="14sp"
-            android:layout_marginTop="4dp" />
+                <TextView
+                    android:id="@+id/timestampText"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@{rilevazione.timestamp}"
+                    android:textStyle="bold"
+                    android:textColor="@color/md_theme_light_primary"
+                    android:textSize="16sp" />
 
-        <!-- (Opzionale) preview del file EVA DTS, testo a scomparsa o truncato -->
-        <TextView
-            android:id="@+id/filePreviewText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Preview: DXS*9252131001*VA*V1/6*1..."
-            android:textColor="@color/md_theme_light_onSurface"
-            android:textSize="12sp"
-            android:layout_marginTop="8dp"
-            android:maxLines="2"
-            android:ellipsize="end" />
+                <TextView
+                    android:id="@+id/typeBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text='@{rilevazione.evaDts ? @string/badge_eva_dts : @string/badge_manual}'
+                    android:textSize="11sp"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="2dp"
+                    android:textColor="@color/md_theme_light_onSecondaryContainer" />
+            </LinearLayout>
 
-    </LinearLayout>
-</com.google.android.material.card.MaterialCardView>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
+
+                <TextView
+                    android:id="@+id/incassoText"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@{@string/price_format(rilevazione.importo)}"
+                    android:textColor="@color/md_theme_light_onSurface"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/venditeText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@{@string/sales_count_format(rilevazione.numeroVendite)}"
+                    android:visibility="@{rilevazione.evaDts ? View.VISIBLE : View.GONE}"
+                    android:textColor="@color/md_theme_light_outline"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/restiText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@{@string/change_format(rilevazione.resti)}"
+                android:visibility="@{!rilevazione.evaDts &amp;&amp; rilevazione.resti > 0 ? View.VISIBLE : View.GONE}"
+                android:textColor="@color/md_theme_light_outline"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp" />
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 </layout>

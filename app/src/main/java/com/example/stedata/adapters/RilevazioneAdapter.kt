@@ -21,10 +21,14 @@ class RilevazioneAdapter(
 
     override fun onBindViewHolder(holder: RilevazioneViewHolder, position: Int) {
         val r = rilevazioni[position]
-        holder.binding.timestampText.text = r.timestamp
-        holder.binding.incassoText.text = "Incasso: €${r.incasso}"
-        holder.binding.restiText.text = "Resti: €${r.resti}"
 
+        // PASSA L'OGGETTO ALLA VARIABILE XML
+        holder.binding.rilevazione = r
+
+        // FORZA L'AGGIORNAMENTO IMMEDIATO
+        holder.binding.executePendingBindings()
+
+        // GESTIONE CLICK
         holder.binding.root.setOnClickListener {
             onClick(r)
         }
@@ -32,4 +36,3 @@ class RilevazioneAdapter(
 
     override fun getItemCount() = rilevazioni.size
 }
-

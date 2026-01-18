@@ -11,12 +11,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.navigation.fragment.navArgs // Safe Args
+import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.stedata.adapters.RilevazioneAdapter
-import com.example.stedata.databinding.FragmentMachineDetailBinding // O il nuovo nome del layout
+import com.example.stedata.databinding.FragmentMachineDetailBinding
 import com.example.stedata.models.Rilevazione
 
 class MachineDetailFragment : Fragment() {
@@ -24,9 +24,8 @@ class MachineDetailFragment : Fragment() {
     private var _binding: FragmentMachineDetailBinding? = null
     private val binding get() = _binding!!
 
-    // ViewModel e Args funzionano UGUALE
     private val viewModel: MachineDetailViewModel by viewModels()
-    private val args: MachineDetailFragmentArgs by navArgs() // Nota: il nome della classe Args cambierà dopo il rebuild
+    private val args: MachineDetailFragmentArgs by navArgs()
 
     private val rilevazioniList = mutableListOf<Rilevazione>()
     private lateinit var adapter: RilevazioneAdapter
@@ -42,7 +41,6 @@ class MachineDetailFragment : Fragment() {
 
         machineId = args.machineId
 
-        // Imposta il titolo nella Toolbar della HomeActivity
         (requireActivity() as AppCompatActivity).supportActionBar?.title = "Gettoniera ${args.machineId}"
 
         setupRecyclerView()
@@ -57,8 +55,6 @@ class MachineDetailFragment : Fragment() {
         }
         binding.rilevazioniRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.rilevazioniRecyclerView.adapter = adapter
-
-        // Collega lo swipe
         ItemTouchHelper(swipeHandler).attachToRecyclerView(binding.rilevazioniRecyclerView)
     }
 
@@ -73,27 +69,69 @@ class MachineDetailFragment : Fragment() {
         }
     }
 
-    // ... [Inserisci qui showRilevazioneDialog e swipeHandler uguali a prima] ...
-    // Nota: dentro swipeHandler usa 'requireContext()' invece di 'this' o 'this@MachineDetailActivity'
     private fun showRilevazioneDialog(r: Rilevazione) {
-        val message = """
-             Data: ${r.timestamp}
-             Incasso: €${String.format("%.2f", r.incasso)}
-             Resti: €${String.format("%.2f", r.resti)}
-             File: ${if(r.file.isNotEmpty()) r.file else "Nessun file"}
-         """.trimIndent()
+        val sb = StringBuilder()
+
+        sb.appendLine("📅 Data: ${r.timestamp}")
+        sb.appendLine("💰 Incasso Totale: €${String.format("%.2f", r.getImporto())}")
+
+        if (r.isEvaDts()) {
+            // DATI COMPLETI (EVA-DTS)
+            sb.appendLine("\n📊 STATISTICHE VENDITA")
+            sb.appendLine("Numero Vendite: ${r.numeroVendite}")
+
+            r.contabilitaCash?.let { cash ->
+                sb.appendLine("\n💵 CONTANTI")
+                sb.appendLine("Vendite: €${String.format("%.2f", cash["venditeContanti"] ?: 0.0)}")
+                sb.appendLine("Nel Box: €${String.format("%.2f", cash["incassoBox"] ?: 0.0)}")
+                sb.appendLine("Nei Tubi: €${String.format("%.2f", cash["incassoTubi"] ?: 0.0)}")
+            }
+
+            r.contabilitaCashless?.let { cashless ->
+                sb.appendLine("\n💳 CASHLESS")
+                val totCashless = (cashless["sistema1_vendite"] ?: 0.0) + (cashless["sistema2_vendite"] ?: 0.0)
+                sb.appendLine("Totale Elettronico: €${String.format("%.2f", totCashless)}")
+            }
+
+            if (!r.prodotti.isNullOrEmpty()) {
+                sb.appendLine("\n🍫 TOP 5 PRODOTTI")
+                // Ordina per quantità venduta (assume che la mappa abbia "venditeQta" come Number)
+                val topProducts = r.prodotti.sortedByDescending {
+                    (it["venditeQta"] as? Number)?.toInt() ?: 0
+                }.take(5)
+
+                topProducts.forEach { p ->
+                    val nome = p["nome"] as? String ?: "Prodotto ${p["id"]}"
+                    val qta = (p["venditeQta"] as? Number)?.toInt() ?: 0
+                    if (qta > 0) {
+                        sb.appendLine("- $nome: $qta pz")
+                    }
+                }
+            }
+
+            if (!r.fileId.isNullOrEmpty()) {
+                sb.appendLine("\n📄 File: ${r.fileId}")
+            }
+
+        } else {
+            // DATI MANUALI
+            sb.appendLine("\n📝 INSERIMENTO MANUALE")
+            if (r.resti != null) {
+                sb.appendLine("Resti dichiarati: €${String.format("%.2f", r.resti)}")
+            }
+            if (!r.file.isNullOrEmpty()) {
+                sb.appendLine("Note: ${r.file}")
+            }
+        }
 
         androidx.appcompat.app.AlertDialog.Builder(requireContext())
-            .setTitle("Dettagli Rilevazione")
-            .setMessage(message)
+            .setTitle(if (r.isEvaDts()) "Dettaglio EVA-DTS" else "Dettaglio Manuale")
+            .setMessage(sb.toString())
             .setPositiveButton("Chiudi", null)
             .show()
     }
 
-    // 3. Gestione Swipe per eliminare (Versione LEFT - Da destra a sinistra)
-    // Se vuoi coerenza con la Home (che abbiamo messo RIGHT), cambia qui sotto "ItemTouchHelper.LEFT" in "RIGHT"
-    // e adatta il rettangolo nel metodo onChildDraw come abbiamo fatto in HomeFragment.
-    private val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) { // 1. CAMBIATO: RIGHT
+    private val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
 
         override fun onMove(rv: RecyclerView, vh: RecyclerView.ViewHolder, t: RecyclerView.ViewHolder) = false
 
@@ -127,8 +165,6 @@ class MachineDetailFragment : Fragment() {
             val itemView = vh.itemView
             val paint = Paint().apply { color = Color.RED }
 
-            // 2. CAMBIATO: Calcolo rettangolo per swipe verso DESTRA (dX > 0)
-            // Parte dal bordo sinistro (itemView.left) e si estende per dX
             val background = RectF(
                 itemView.left.toFloat(),
                 itemView.top.toFloat(),
@@ -143,7 +179,6 @@ class MachineDetailFragment : Fragment() {
                 val top = itemView.top + margin
                 val bottom = top + it.intrinsicHeight
 
-                // 3. CAMBIATO: Posizione icona (ancorata a SINISTRA)
                 val left = itemView.left + margin
                 val right = itemView.left + margin + it.intrinsicWidth
 

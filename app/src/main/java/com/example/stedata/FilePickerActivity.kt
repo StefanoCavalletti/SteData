@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -12,8 +13,6 @@ import com.example.stedata.databinding.ActivityFilePickerBinding
 import com.example.stedata.models.EvaDtsReport
 import com.example.stedata.parser.EvaDtsParser
 import com.example.stedata.repository.MachineRepository
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -23,21 +22,19 @@ import java.util.*
 class FilePickerActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityFilePickerBinding
-    private val auth = FirebaseAuth.getInstance()
-    private val db = FirebaseFirestore.getInstance()
     private val parser = EvaDtsParser()
     private val repository = MachineRepository()
+    private var currentReport: EvaDtsReport? = null
 
     private val filePickerLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.data?.let { uri ->
-                parseAndSaveFile(uri)
+                parseFile(uri)
             }
         }
     }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityFilePickerBinding.inflate(layoutInflater)
@@ -46,12 +43,23 @@ class FilePickerActivity : AppCompatActivity() {
     }
 
     private fun setupUI() {
+        // seleziona file
         binding.btnSelectFile.setOnClickListener {
             openFilePicker()
         }
-
-        binding.btnBack.setOnClickListener {
-            finish()
+        // torna indietro
+        binding.toolbar.setNavigationOnClickListener {
+            finish() // Chiude l'activity
+        }
+        //conferma
+        binding.btnSave.setOnClickListener {
+            currentReport?.let { report ->
+                saveToFirebase(report)
+            }
+        }
+        //annulla
+        binding.btnCancel.setOnClickListener {
+            resetUI()
         }
     }
 
@@ -68,167 +76,68 @@ class FilePickerActivity : AppCompatActivity() {
         filePickerLauncher.launch(intent)
     }
 
-    private fun parseAndSaveFile(uri: Uri) {
-        binding.progressBar.visibility = android.view.View.VISIBLE
-        binding.btnSelectFile.isEnabled = false
+    private fun parseFile(uri: Uri) {
+        binding.progressBar.visibility = View.VISIBLE
+        binding.btnSelectFile.isEnabled = false // Evita doppi click
 
         lifecycleScope.launch {
             try {
+                // Parsing
                 val report = withContext(Dispatchers.IO) {
                     parser.parseFromUri(this@FilePickerActivity, uri)
                 }
 
                 if (report != null) {
+                    currentReport = report
                     showReportPreview(report)
-                    saveToFirebase(report)
                 } else {
-                    showError("Errore durante il parsing del file")
+                    showError(getString(R.string.msg_read_error))
                 }
             } catch (e: Exception) {
-                showError("Errore: ${e.message}")
+                showError(getString(R.string.msg_generic_error, e.message))
             } finally {
-                binding.progressBar.visibility = android.view.View.GONE
-                binding.btnSelectFile.isEnabled = true
+                binding.progressBar.visibility = View.GONE
             }
         }
     }
 
     private fun showReportPreview(report: EvaDtsReport) {
         val preview = buildString {
-            appendLine("📊 REPORT EVA DTS")
-            appendLine("━━━━━━━━━━━━━━━━━━━━━━")
-            appendLine()
+            appendLine(getString(R.string.preview_header))
+            appendLine(getString(R.string.preview_separator))
+            appendLine(getString(R.string.preview_serial, report.machineInfo.serialNumber))
 
-            appendLine("🏷️ MACCHINA")
-            appendLine("Serial: ${report.machineInfo.serialNumber}")
-            report.machineInfo.modelNumber?.let { appendLine("Modello: $it") }
-            report.machineInfo.assetNumber?.let { appendLine("Asset: $it") }
-            appendLine()
+            val incassoFormatted = String.format("€%.2f", report.salesData.paidVendValueInit)
+            appendLine(getString(R.string.preview_total_cash, incassoFormatted))
 
-            appendLine("💰 VENDITE")
-            appendLine("Valore: €${String.format("%.2f", report.salesData.paidVendValueInit)}")
-            appendLine("Numero: ${report.salesData.paidVendCountInit}")
-            appendLine()
-
-            appendLine("💵 CONTANTI")
-            appendLine("Vendite: €${String.format("%.2f", report.cashData.cashSalesValueInit)}")
-            appendLine("Numero: ${report.cashData.cashSalesCountInit}")
-            appendLine()
-
-            if (report.cashlessData != null) {
-                appendLine("💳 CASHLESS")
-                report.cashlessData.cashless1SalesValueInit?.let {
-                    appendLine("Vendite: €${String.format("%.2f", it)}")
-                }
-                report.cashlessData.cashless1SalesCountInit?.let {
-                    appendLine("Numero: $it")
-                }
-                appendLine()
-            }
-
-            appendLine("📦 PRODOTTI")
-            appendLine("Totale: ${report.products.size}")
-            report.products.take(5).forEach { product ->
-                appendLine("  • ${product.productId}: €${String.format("%.2f", product.price ?: 0.0)}")
-            }
-            if (report.products.size > 5) {
-                appendLine("  ... e altri ${report.products.size - 5}")
-            }
+            appendLine(getString(R.string.preview_sales_count, report.salesData.paidVendCountInit))
+            appendLine(getString(R.string.preview_products_count, report.products.size))
         }
 
         binding.tvPreview.text = preview
-        binding.tvPreview.visibility = android.view.View.VISIBLE
-        binding.btnSave.visibility = android.view.View.VISIBLE
 
-        binding.btnSave.setOnClickListener {
-            saveToFirebase(report)
-        }
+        // nascondo pulsante seleziona e mostro gli altri
+        binding.btnSelectFile.visibility = View.GONE
+        binding.actionButtonsLayout.visibility = View.VISIBLE
     }
 
-    /*private fun saveToFirebase(report: EvaDtsReport) {
-        val uid = auth.currentUser?.uid ?: return
-        val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
-        val machineId = report.machineInfo.assetNumber ?: report.machineInfo.serialNumber
+    private fun resetUI() {
+        currentReport = null
+        binding.tvPreview.text = getString(R.string.picker_preview_placeholder)
 
-        // Crea documento rilevazione
-        // costruisco la rilevazione principale come MutableMap<String, Any>
-        val rilevazione: MutableMap<String, Any> = hashMapOf(
-            "timestamp" to timestamp,
-            "machineId" to machineId,
-            "incasso" to (report.salesData.paidVendValueInit ?: 0.0),
-            "numeroVendite" to (report.salesData.paidVendCountInit ?: 0),
-            "contanti" to (report.cashData.cashSalesValueInit ?: 0.0),
-            "cashless" to (report.cashlessData?.cashless1SalesValueInit ?: 0.0),
-            "file" to (report.header.communicationId ?: "")
-        )
-
-// costruisco esplicitamente una HashMap<String, Any> per i prodotti
-        val prodottiMap = hashMapOf<String, Any>()
-        for (product in report.products) {
-            val prodottoInfo: Map<String, Any> = mapOf(
-                "prezzo" to (product.price ?: 0.0),
-                "vendite" to (product.paidCountInit ?: 0),
-                "valore" to (product.paidValueInit ?: 0.0)
-            )
-            // usa productId come key (assicurati che non sia null)
-            val pid = product.productId ?: "unknown"
-            prodottiMap[pid] = prodottoInfo
-        }
-
-// assegno la mappa dei prodotti alla rilevazione
-        rilevazione["prodotti"] = prodottiMap
-
-// ora puoi salvare 'rilevazione' su Firestore, ad esempio:
-// db.collection("users").document(uid).collection("...").add(rilevazione)
-
-
-
-        val machineRef = db.collection("users").document(uid)
-            .collection("vending_machines").document(machineId)
-
-        // Aggiorna o crea macchina
-        machineRef.get().addOnSuccessListener { doc ->
-            if (!doc.exists()) {
-                val newMachine = mapOf(
-                    "machineId" to machineId,
-                    "serialNumber" to report.machineInfo.serialNumber,
-                    "model" to (report.machineInfo.modelNumber ?: ""),
-                    "lastUpdate" to timestamp,
-                    "totalRilevazioni" to 1
-                )
-                machineRef.set(newMachine)
-            } else {
-                val currentTotal = doc.getLong("totalRilevazioni") ?: 0
-                machineRef.update(
-                    "lastUpdate", timestamp,
-                    "totalRilevazioni", currentTotal + 1
-                )
-            }
-
-            // Salva rilevazione
-            machineRef.collection("rilevazioni").add(rilevazione)
-                .addOnSuccessListener {
-                    Toast.makeText(
-                        this,
-                        "✅ Rilevazione salvata con successo!",
-                        Toast.LENGTH_LONG
-                    ).show()
-                    finish()
-                }
-                .addOnFailureListener { e ->
-                    showError("Errore nel salvataggio: ${e.message}")
-                }
-        }
+        // Torna allo stato iniziale
+        binding.actionButtonsLayout.visibility = View.GONE
+        binding.btnSelectFile.visibility = View.VISIBLE
+        binding.btnSelectFile.isEnabled = true
     }
-
-
-     */
 
     private fun saveToFirebase(report: EvaDtsReport) {
+        binding.progressBar.visibility = View.VISIBLE
+        binding.btnSave.isEnabled = false
+        binding.btnCancel.isEnabled = false
+
         val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
         val machineId = report.machineInfo.assetNumber ?: report.machineInfo.serialNumber
-
-        // Prepariamo la mappa dati (identica struttura del ViewModel!)
         val rilevazioneMap = hashMapOf<String, Any>(
             "timestamp" to timestamp,
             "machineId" to machineId,
@@ -236,24 +145,30 @@ class FilePickerActivity : AppCompatActivity() {
             "numeroVendite" to (report.salesData.paidVendCountInit ?: 0),
             "contanti" to (report.cashData.cashSalesValueInit ?: 0.0),
             "file" to (report.header.communicationId ?: "")
-            // ... aggiungi altri campi se vuoi ...
         )
+
 
         lifecycleScope.launch {
             try {
                 repository.saveRilevazione(machineId, rilevazioneMap)
-                Toast.makeText(this@FilePickerActivity, "✅ Salvato con successo!", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@FilePickerActivity, getString(R.string.msg_save_success), Toast.LENGTH_LONG).show()
                 finish()
             } catch (e: Exception) {
-                showError("Errore nel salvataggio: ${e.message}")
+                showError(getString(R.string.msg_save_error, e.message))
+
+                binding.progressBar.visibility = View.GONE
+                binding.btnSave.isEnabled = true
+                binding.btnCancel.isEnabled = true
             }
         }
     }
 
-
     private fun showError(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
-        binding.tvPreview.text = "❌ $message"
-        binding.tvPreview.visibility = android.view.View.VISIBLE
+        binding.tvPreview.text = getString(R.string.error_prefix, message)
+
+        binding.btnSelectFile.visibility = View.VISIBLE
+        binding.btnSelectFile.isEnabled = true
+        binding.actionButtonsLayout.visibility = View.GONE
     }
 }

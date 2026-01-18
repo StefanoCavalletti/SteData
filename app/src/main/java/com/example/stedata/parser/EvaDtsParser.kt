@@ -287,7 +287,7 @@ class EvaDtsParser {
         return segments.find { it.blockId == "G85" }?.get(0) ?: ""
     }
 
-    // ==================== HELPER FUNCTIONS ====================
+    // funzioni helper
 
     private fun findNextSegment(
         segments: List<DataSegment>,

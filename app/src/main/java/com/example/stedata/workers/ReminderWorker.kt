@@ -10,7 +10,6 @@ import androidx.core.app.NotificationCompat
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.example.stedata.HomeActivity
-import com.example.stedata.R
 
 class ReminderWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
 
@@ -24,7 +23,7 @@ class ReminderWorker(context: Context, params: WorkerParameters) : Worker(contex
         val channelId = "daily_reminder_channel"
         val notificationId = 101
 
-        // 1. Crea il canale di notifica (Obbligatorio per Android 8+)
+        // 1. Crea il canale di notifica
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = "Promemoria Giornaliero"
             val descriptionText = "Canale per i promemoria di inserimento dati"
@@ -58,7 +57,7 @@ class ReminderWorker(context: Context, params: WorkerParameters) : Worker(contex
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        // Controllo permessi (per sicurezza, anche se il Worker gira in background)
+        // Controllo permessi
         try {
             notificationManager.notify(notificationId, builder.build())
         } catch (e: SecurityException) {

@@ -16,4 +16,6 @@
     <color name="md_theme_light_onSurface">#1E1E1E</color>
     <color name="md_theme_light_onSurfaceVariant">#5A5A5A</color>
     <color name="md_theme_light_outline">#B0BEC5</color>
+    <color name="md_theme_light_secondaryContainer">#E8DEF8</color>
+    <color name="md_theme_light_onSecondaryContainer">#1D192B</color>
 </resources>

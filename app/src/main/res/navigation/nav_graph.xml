@@ -20,6 +20,9 @@
         <action
             android:id="@+id/action_nav_home_to_nav_machine_detail"
             app:destination="@id/nav_machine_detail" />
+        <action
+            android:id="@+id/action_nav_home_to_nav_logout"
+            app:destination="@id/nav_logout" />
     </fragment>
 
     <fragment

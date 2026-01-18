@@ -1,5 +1,58 @@
 <resources>
     <string name="app_name">SteData</string>
+
+    <string name="email_hint">Email</string>
+    <string name="password_hint">Password</string>
+    <string name="user_email_placeholder">utente@example.com</string>
+
+    <string name="login_title">Accedi</string>
+    <string name="login_btn">Accedi</string>
+    <string name="login_loading">Attendi...</string>
+    <string name="login_to_register_prompt">Non hai un account? Registrati</string>
+
+    <string name="register_title">Crea Account</string>
+    <string name="register_name_hint">Nome</string>
+    <string name="register_confirm_password_hint">Conferma Password</string>
+    <string name="register_btn">Registrati</string>
+    <string name="register_loading">Registrazione...</string>
+    <string name="register_to_login_prompt">Hai già un account? Accedi</string>
+
+    <string name="home_toolbar_title">Home</string>
+    <string name="home_subtitle">Le tue gettoniere</string>
+    <string name="fab_add_desc">Aggiungi rilevazione</string>
+    <string name="fab_import_desc">Importa file EVA DTS</string>
+
+    <string name="machine_id_prefix">ID:&#160;</string> <string name="machine_update_prefix">Ultimo aggiornamento:&#160;</string>
+
+    <string name="picker_title">Importa file EVA-DTS</string>
+    <string name="picker_preview_placeholder">Seleziona un file per vedere l\'anteprima...</string>
+    <string name="picker_select_btn">Seleziona File</string>
+    <string name="picker_cancel_btn">Annulla</string>
+    <string name="picker_confirm_btn">Conferma</string>
+
+    <string name="settings_title">Impostazioni</string>
+    <string name="settings_theme_btn">Cambia tema</string>
+    <string name="settings_logout_btn">Logout</string>
+
+    <string name="msg_save_success">✅ Salvato con successo!</string>
+    <string name="msg_read_error">Impossibile leggere il file.</string>
+    <string name="msg_save_error">Errore nel salvataggio: %1$s</string>
+    <string name="msg_generic_error">Errore: %1$s</string>
+    <string name="error_prefix">❌ %1$s</string>
+
+    <string name="preview_header">📊 ANTEPRIMA DATI</string>
+    <string name="preview_separator">━━━━━━━━━━━━━━━━━━━━━━</string>
+    <string name="preview_serial">Matricola: %1$s</string>
+    <string name="preview_total_cash">Incasso Totale: %1$s</string>
+    <string name="preview_sales_count">Numero Vendite: %1$d</string>
+    <string name="preview_products_count">Prodotti rilevati: %1$d</string>
+
+    <string name="badge_eva_dts">EVA-DTS</string>
+    <string name="badge_manual">MANUALE</string>
+    <string name="price_format">€ %.2f</string>
+    <string name="sales_count_format">%d Vendite</string>
+    <string name="change_format">Resti: € %.2f</string>
+
     <string name="navigation_drawer_open">Apri menu</string>
     <string name="navigation_drawer_close">Chiudi menu</string>
     <string name="welcome_message">Benvenuto in SteData</string>

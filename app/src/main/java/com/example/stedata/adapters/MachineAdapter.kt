@@ -21,19 +21,22 @@ class MachineAdapter(
 
     override fun onBindViewHolder(holder: MachineViewHolder, position: Int) {
         val machine = machines[position]
-        holder.binding.machineIdText.text = "ID: ${machine.machineId}"
-        holder.binding.machineLastUpdate.text = "Ultimo aggiornamento: ${machine.lastUpdate}"
+
+        // PASSA I DATI AL LAYOUT
+        holder.binding.machine = machine
+
+        // FORZA L'AGGIORNAMENTO IMMEDIATO
+        holder.binding.executePendingBindings()
+
+        // GESTIONE CLICK
         holder.binding.root.setOnClickListener { onClick(machine) }
     }
 
     override fun getItemCount() = machines.size
 
     fun updateList(newMachines: List<Machine>) {
-        // Se la lista è immutabile (List), devi convertire la tua var interna in MutableList o riassegnarla
-        // Assumendo che nel costruttore tu abbia passato una MutableList:
         (machines as MutableList).clear()
         machines.addAll(newMachines)
         notifyDataSetChanged()
     }
-
 }

@@ -1,40 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout>
-<com.google.android.material.card.MaterialCardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    app:cardElevation="4dp"
-    app:cardCornerRadius="12dp"
-    app:cardBackgroundColor="@android:color/white"
-    android:clickable="true"
-    android:focusable="true">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <LinearLayout
+    <data>
+        <variable
+            name="machine"
+            type="com.example.stedata.models.Machine" />
+    </data>
+
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_marginBottom="8dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="2dp"
+        android:clickable="true"
+        android:focusable="true">
 
-        <TextView
-            android:id="@+id/machineIdText"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="ID: VEND1234"
-            android:textStyle="bold"
-            android:textSize="18sp"
-            android:textColor="@color/md_theme_light_primary" />
+            android:orientation="vertical"
+            android:padding="16dp">
 
-        <TextView
-            android:id="@+id/machineLastUpdate"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Ultimo aggiornamento: 2025-10-14"
-            android:textSize="14sp"
-            android:textColor="@color/md_theme_light_onSurface"
-            android:layout_marginTop="4dp" />
-    </LinearLayout>
-</com.google.android.material.card.MaterialCardView>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@android:drawable/ic_menu_my_calendar"
+                    app:tint="@color/md_theme_light_primary"
+                    android:layout_marginEnd="8dp" />
+
+                <TextView
+                    android:id="@+id/machineIdText"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text='@{@string/machine_id_prefix + machine.machineId}'
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/md_theme_light_onSurface" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text='@{String.valueOf(machine.totalRilevazioni)}'
+                    android:paddingHorizontal="8dp"
+                    android:textColor="@color/md_theme_light_primary"
+                    android:textStyle="bold"/>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/machineLastUpdate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text='@{@string/machine_update_prefix + machine.lastUpdate}'
+                android:textSize="14sp"
+                android:textColor="@color/md_theme_light_outline"
+                android:layout_marginTop="4dp" />
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 </layout>

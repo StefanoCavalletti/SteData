@@ -19,7 +19,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:backgroundTint="@color/md_theme_light_primary"
-                android:title="Home"
+                android:title="@string/home_toolbar_title"
                 android:titleTextColor="@color/md_theme_light_onPrimary"
                 app:titleCentered="true"
                 app:navigationIcon="@android:drawable/ic_menu_more"

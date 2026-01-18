@@ -4,73 +4,90 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.auth.UserProfileChangeRequest
 
 class AuthViewModel : ViewModel() {
 
     private val auth = FirebaseAuth.getInstance()
-    private val db = FirebaseFirestore.getInstance()
 
-    // LiveData per comunicare il risultato alla UI
-    // Usiamo un semplice Boolean: true = successo, false = fallimento
+    // campi databinding
+    val name = MutableLiveData<String>("")
+    val email = MutableLiveData<String>("")
+    val password = MutableLiveData<String>("")
+    val confirmPassword = MutableLiveData<String>("")
+
+    // stati ui
     private val _authResult = MutableLiveData<Boolean?>()
     val authResult: LiveData<Boolean?> get() = _authResult
 
-    // LiveData per i messaggi di errore (es. "Password errata")
+    private val _isLoading = MutableLiveData<Boolean>(false)
+    val isLoading: LiveData<Boolean> get() = _isLoading
+
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> get() = _errorMessage
 
-    // LiveData per mostrare il caricamento (es. disabilitare bottoni)
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> get() = _isLoading
+    // funzione login
+    fun login() {
+        val currentEmail = email.value?.trim() ?: ""
+        val currentPassword = password.value?.trim() ?: ""
 
-    var sharedEmail: String = ""
+        if (currentEmail.isEmpty() || currentPassword.isEmpty()) {
+            _errorMessage.value = "Compila email e password"
+            return
+        }
 
-    fun login(email: String, password: String) {
         _isLoading.value = true
-        auth.signInWithEmailAndPassword(email, password)
-            .addOnSuccessListener {
+        auth.signInWithEmailAndPassword(currentEmail, currentPassword)
+            .addOnCompleteListener { task ->
                 _isLoading.value = false
-                _authResult.value = true
-            }
-            .addOnFailureListener { e ->
-                _isLoading.value = false
-                _errorMessage.value = "Login fallito: ${e.message}"
-                _authResult.value = false
+                if (task.isSuccessful) {
+                    _authResult.value = true
+                } else {
+                    _errorMessage.value = "Errore: ${task.exception?.message}"
+                }
             }
     }
 
-    fun register(name: String, email: String, password: String) {
-        _isLoading.value = true
-        auth.createUserWithEmailAndPassword(email, password)
-            .addOnSuccessListener { result ->
-                // Se la creazione Auth ha successo, salviamo su Firestore
-                val userId = result.user?.uid ?: return@addOnSuccessListener
-                val userMap = hashMapOf(
-                    "name" to name,
-                    "email" to email,
-                    "createdAt" to System.currentTimeMillis()
-                )
+    // funzione Register
+    fun register() {
+        val currentName = name.value?.trim() ?: ""
+        val currentEmail = email.value?.trim() ?: ""
+        val currentPassword = password.value?.trim() ?: ""
+        val currentConfirm = confirmPassword.value?.trim() ?: ""
 
-                db.collection("users").document(userId).set(userMap)
-                    .addOnSuccessListener {
+        if (currentName.isEmpty() || currentEmail.isEmpty() || currentPassword.isEmpty()) {
+            _errorMessage.value = "Compila tutti i campi"
+            return
+        }
+
+        if (currentPassword != currentConfirm) {
+            _errorMessage.value = "Le password non coincidono"
+            return
+        }
+
+        _isLoading.value = true
+        auth.createUserWithEmailAndPassword(currentEmail, currentPassword)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val user = auth.currentUser
+                    val profileUpdates = UserProfileChangeRequest.Builder()
+                        .setDisplayName(currentName)
+                        .build()
+
+                    user?.updateProfile(profileUpdates)?.addOnCompleteListener {
                         _isLoading.value = false
-                        _authResult.value = true // Tutto ok!
+                        _authResult.value = true
                     }
-                    .addOnFailureListener { e ->
-                        _isLoading.value = false
-                        _errorMessage.value = "Errore salvataggio dati: ${e.message}"
-                    }
-            }
-            .addOnFailureListener { e ->
-                _isLoading.value = false
-                _errorMessage.value = "Registrazione fallita: ${e.message}"
+                } else {
+                    _isLoading.value = false
+                    _errorMessage.value = "Errore: ${task.exception?.message}"
+                }
             }
     }
 
-    // Serve per resettare lo stato quando si cambia schermata
     fun resetState() {
-        _authResult.value = null
+        // Non resetto email/password qui per permettere la persistenza tra schermate
         _errorMessage.value = null
+        _authResult.value = null
     }
 }

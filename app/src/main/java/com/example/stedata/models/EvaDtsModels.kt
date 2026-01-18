@@ -181,12 +181,3 @@ data class ReadInfo(
     val totalReads: Int?,
     val totalResets: Int?
 )
-
-/**
- * Informazioni Valuta (ID4)
- */
-data class CurrencyInfo(
-    val decimalPosition: Int,
-    val numericCode: String?,
-    val alphabeticCode: String?
-)

@@ -10,18 +10,15 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 1. Imposta il tema chiaro (codice preso dalla tua vecchia MainActivity)
+        //Disabilito la modalità notturna (ho avuto bug)
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
 
-        // 2. CONTROLLO LOGIN IMMEDIATO
         // Se l'utente è già loggato, vai alla Home e chiudi questa activity.
         if (FirebaseAuth.getInstance().currentUser != null) {
             startActivity(Intent(this, HomeActivity::class.java))
             finish()
-            return // IMPORTANTE: Interrompe l'esecuzione, così non carica il layout sotto
+            return
         }
-
-        // 3. Se non è loggato, carica il contenitore dei Fragment (Login/Register)
         setContentView(R.layout.activity_login)
     }
 }

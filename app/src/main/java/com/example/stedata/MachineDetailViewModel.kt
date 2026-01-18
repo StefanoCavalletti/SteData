@@ -26,7 +26,7 @@ class MachineDetailViewModel : ViewModel() {
             .get()
             .addOnSuccessListener { snapshot ->
                 val list = snapshot.documents.mapNotNull { it.toObject(Rilevazione::class.java) }
-                // Ordiniamo per data decrescente (opzionale ma consigliato)
+                // Ordinato per data decrescente
                 _rilevazioni.value = list.sortedByDescending { it.timestamp }
             }
             .addOnFailureListener { e ->
