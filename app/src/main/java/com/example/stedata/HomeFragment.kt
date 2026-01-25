@@ -52,6 +52,11 @@ class HomeFragment : Fragment() {
         viewModel.loadMachines()
     }
 
+    override fun onResume() {
+        super.onResume()
+        viewModel.loadMachines()
+    }
+
     private fun setupRecyclerView() {
         adapter = MachineAdapter(machines) { machine ->
             val action = HomeFragmentDirections.actionNavHomeToNavMachineDetail(machine.machineId)
@@ -74,7 +79,12 @@ class HomeFragment : Fragment() {
         }
 
         viewModel.statusMessage.observe(viewLifecycleOwner) { message ->
-            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+            // Esegui solo se il messaggio non è null
+            message?.let {
+                Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+
+                viewModel.clearStatusMessage()
+            }
         }
     }
 

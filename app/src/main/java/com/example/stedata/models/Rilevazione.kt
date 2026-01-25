@@ -26,6 +26,6 @@ data class Rilevazione(
 
     // Per distinguere file da inserimenti a mano
     fun isEvaDts(): Boolean {
-        return !prodotti.isNullOrEmpty() || fileId != null
+        return !prodotti.isNullOrEmpty() || !fileId.isNullOrEmpty() || !file.isNullOrEmpty()
     }
 }

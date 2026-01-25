@@ -125,7 +125,6 @@ class FilePickerActivity : AppCompatActivity() {
         currentReport = null
         binding.tvPreview.text = getString(R.string.picker_preview_placeholder)
 
-        // Torna allo stato iniziale
         binding.actionButtonsLayout.visibility = View.GONE
         binding.btnSelectFile.visibility = View.VISIBLE
         binding.btnSelectFile.isEnabled = true
@@ -137,20 +136,63 @@ class FilePickerActivity : AppCompatActivity() {
         binding.btnCancel.isEnabled = false
 
         val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
+        // Usa l'asset number se c'è, altrimenti il seriale
         val machineId = report.machineInfo.assetNumber ?: report.machineInfo.serialNumber
-        val rilevazioneMap = hashMapOf<String, Any>(
-            "timestamp" to timestamp,
-            "machineId" to machineId,
-            "incasso" to (report.salesData.paidVendValueInit ?: 0.0),
-            "numeroVendite" to (report.salesData.paidVendCountInit ?: 0),
-            "contanti" to (report.cashData.cashSalesValueInit ?: 0.0),
-            "file" to (report.header.communicationId ?: "")
+
+        val fullDataMap = hashMapOf<String, Any>()
+
+        // 1. Dati
+        fullDataMap["timestamp"] = timestamp
+        fullDataMap["machineId"] = machineId
+        fullDataMap["file"] = report.header.communicationId ?: ""
+
+        // Totali generali
+        fullDataMap["incassoTotale"] = report.salesData.paidVendValueInit ?: 0.0
+        fullDataMap["numeroVendite"] = report.salesData.paidVendCountInit ?: 0
+
+        // 2. Info Macchina
+        fullDataMap["infoMacchina"] = mapOf(
+            "serial" to (report.machineInfo.serialNumber ?: ""),
+            "model" to (report.machineInfo.modelNumber ?: ""),
+            "location" to (report.machineInfo.location ?: ""),
+            "buildStandard" to (report.machineInfo.buildStandard ?: "")
         )
 
+        // 3. Contabilità Contanti
+        fullDataMap["contabilitaCash"] = mapOf(
+            "venditeContanti" to (report.cashData.cashSalesValueInit ?: 0.0),
+            "incassoBox" to (report.cashData.cashToBoxInit ?: 0.0),
+            "incassoTubi" to (report.cashData.cashToTubesInit ?: 0.0),
+            "banconote" to (report.cashData.billsInInit ?: 0.0),
+            "erogatoResto" to (report.cashData.cashDispensedInit ?: 0.0)
+        )
+
+        // 4. Contabilità Cashless
+        if (report.cashlessData != null) {
+            fullDataMap["contabilitaCashless"] = mapOf(
+                "sistema1_vendite" to (report.cashlessData.cashless1SalesValueInit ?: 0.0),
+                "sistema2_vendite" to (report.cashlessData.cashless2SalesValueInit ?: 0.0),
+                "sistema1_ricariche" to (report.cashlessData.cashless1CreditedInit ?: 0.0)
+            )
+        }
+
+        // 5. Lista Prodotti (Lista di Mappe)
+        val productsList = report.products.map { prod ->
+            mapOf(
+                "id" to prod.productId,
+                "nome" to (prod.productName ?: ""),
+                "prezzo" to (prod.price ?: 0.0),
+                "venditeQta" to (prod.paidCountInit ?: 0),
+                "venditeValore" to (prod.paidValueInit ?: 0.0),
+                "gratisQta" to (prod.freeCountInit ?: 0)
+            )
+        }
+        fullDataMap["prodotti"] = productsList
 
         lifecycleScope.launch {
             try {
-                repository.saveRilevazione(machineId, rilevazioneMap)
+                repository.saveRilevazione(machineId, fullDataMap)
+
                 Toast.makeText(this@FilePickerActivity, getString(R.string.msg_save_success), Toast.LENGTH_LONG).show()
                 finish()
             } catch (e: Exception) {

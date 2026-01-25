@@ -20,8 +20,8 @@ class HomeViewModel : ViewModel() {
     val machines: LiveData<List<Machine>> get() = _machines
 
     // LiveData per messaggi di stato
-    private val _statusMessage = MutableLiveData<String>()
-    val statusMessage: LiveData<String> get() = _statusMessage
+    private val _statusMessage = MutableLiveData<String?>()
+    val statusMessage: LiveData<String?> get() = _statusMessage
 
     fun loadMachines() {
         viewModelScope.launch {
@@ -41,8 +41,7 @@ class HomeViewModel : ViewModel() {
                 val dati = mapOf(
                     "timestamp" to timestamp,
                     "incasso" to incasso,
-                    "resti" to resti,
-                    "file" to ""
+                    "resti" to resti
                 )
                 repository.saveRilevazione(machineId, dati)
                 _statusMessage.value = "Rilevazione salvata"
@@ -63,5 +62,9 @@ class HomeViewModel : ViewModel() {
                 _statusMessage.value = "Errore eliminazione: ${e.message}"
             }
         }
+    }
+
+    fun clearStatusMessage() {
+        _statusMessage.value = null
     }
 }
